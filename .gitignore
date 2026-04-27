@@ -1,0 +1,21 @@
+# Model weights
+backend/models/*.pth
+
+# Environment secrets
+backend/.env
+frontend/.env
+
+# Database
+*.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store

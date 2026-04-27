@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>History – OralHealth AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #F2F4F8;
+  --surface:   #FFFFFF;
+  --mint:      #17B97A;
+  --mint-lt:   #E6F9F1;
+  --amber:     #F59E0B;
+  --amber-lt:  #FFF4E0;
+  --rose:      #EF4444;
+  --rose-lt:   #FEE9E9;
+  --violet:    #6C5CE7;
+  --violet-lt: #EEF0FF;
+  --text:      #111827;
+  --text-2:    #4B5563;
+  --text-3:    #9CA3AF;
+  --border:    rgba(0,0,0,0.07);
+  --shadow:    0 2px 12px rgba(0,0,0,0.07);
+  --shadow-md: 0 6px 28px rgba(0,0,0,0.10);
+  --r:         18px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.phone {
+  width: 100%;
+  max-width: 390px;
+  background: var(--bg);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* STATUS BAR */
+.status-bar {
+  padding: 14px 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.status-time { font-family:'Sora',sans-serif; font-weight:600; font-size:15px; color:var(--text); }
+.status-icons { display:flex; gap:5px; align-items:center; }
+
+/* HEADER */
+.header {
+  padding: 10px 20px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.header h1 {
+  font-family:'Sora',sans-serif;
+  font-size:28px; font-weight:700;
+  color:var(--text); letter-spacing:-0.5px;
+}
+.header p { font-size:13px; color:var(--text-3); margin-top:2px; }
+.filter-btn {
+  width:38px; height:38px;
+  border-radius:12px;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text-2);
+  box-shadow:var(--shadow);
+  transition:all 0.2s;
+  flex-shrink:0; margin-top:4px;
+}
+.filter-btn:hover { background:var(--violet-lt); border-color:var(--violet); color:var(--violet); }
+
+/* FILTER CHIPS */
+.chips-wrap { padding: 0 20px 16px; }
+.chips-row {
+  display:flex; gap:8px;
+  overflow-x:auto; scrollbar-width:none;
+  padding-bottom:2px;
+}
+.chips-row::-webkit-scrollbar { display:none; }
+.fchip {
+  display:flex; align-items:center; gap:6px;
+  padding:7px 14px;
+  border-radius:40px;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  font-size:12.5px; font-weight:500;
+  color:var(--text-2);
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
+  transition:all 0.18s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.fchip.active {
+  border-color:var(--mint);
+  background:var(--mint-lt);
+  color:var(--mint);
+  font-weight:600;
+}
+.fchip.active-amber { border-color:var(--amber); background:var(--amber-lt); color:#B45309; font-weight:600; }
+.fchip.active-rose  { border-color:var(--rose);  background:var(--rose-lt);  color:var(--rose); font-weight:600; }
+.fchip.active-violet{ border-color:var(--violet); background:var(--violet-lt); color:var(--violet); font-weight:600; }
+.fdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+/* TREND CARD */
+.trend-card {
+  margin:0 14px 16px;
+  background:var(--surface);
+  border-radius:var(--r);
+  border:0.5px solid var(--border);
+  box-shadow:var(--shadow);
+  padding:16px;
+  display:flex; align-items:center; gap:14px;
+  cursor:pointer;
+  transition:transform 0.18s, box-shadow 0.18s;
+}
+.trend-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.trend-icon-wrap {
+  width:46px; height:46px;
+  border-radius:14px;
+  background:var(--mint-lt);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.trend-body { flex:1; min-width:0; }
+.trend-eyebrow {
+  font-size:10px; font-weight:600;
+  letter-spacing:0.07em; text-transform:uppercase;
+  color:var(--text-3); margin-bottom:2px;
+}
+.trend-main {
+  font-family:'Sora',sans-serif;
+  font-size:20px; font-weight:700;
+  color:var(--text);
+  display:flex; align-items:center; gap:7px;
+  margin-bottom:2px;
+}
+.trend-badge {
+  width:18px; height:18px; border-radius:50%;
+  background:var(--mint);
+  display:flex; align-items:center; justify-content:center;
+}
+.trend-sub { font-size:11.5px; color:var(--text-3); line-height:1.4; }
+.view-trend-btn {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  flex-shrink:0;
+}
+.vt-inner {
+  display:flex; align-items:center; gap:5px;
+  background:var(--mint-lt);
+  border:1.5px solid rgba(23,185,122,0.25);
+  border-radius:40px;
+  padding:7px 12px;
+  font-size:12px; font-weight:600; color:var(--mint);
+  white-space:nowrap;
+  transition:all 0.18s;
+}
+.trend-card:hover .vt-inner { background:var(--mint); color:#fff; }
+
+/* SECTION HEADER */
+.section-hd {
+  padding:0 20px 10px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.section-hd-title {
+  font-family:'Sora',sans-serif;
+  font-size:15px; font-weight:700; color:var(--text);
+}
+.sort-btn {
+  display:flex; align-items:center; gap:4px;
+  font-size:12px; font-weight:500; color:var(--text-2);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px; padding:5px 10px;
+  cursor:pointer; transition:all 0.18s;
+}
+.sort-btn:hover { background:var(--violet-lt); color:var(--violet); border-color:var(--violet); }
+
+/* SCAN CARDS */
+.scan-list { padding:0 14px; display:flex; flex-direction:column; gap:10px; }
+
+.scan-card {
+  background:var(--surface);
+  border-radius:var(--r);
+  border:0.5px solid var(--border);
+  box-shadow:var(--shadow);
+  padding:13px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer;
+  transition:transform 0.18s, box-shadow 0.18s;
+  position:relative; overflow:hidden;
+}
+.scan-card::before {
+  content:'';
+  position:absolute; left:0; top:0; bottom:0;
+  width:3.5px;
+  border-radius:4px 0 0 4px;
+  background:var(--border);
+  transition:background 0.18s;
+}
+.scan-card.low::before  { background:var(--mint); }
+.scan-card.med::before  { background:var(--amber); }
+.scan-card.high::before { background:var(--rose); }
+.scan-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+
+/* Thumbnail */
+.scan-thumb {
+  width:62px; height:62px;
+  border-radius:13px; flex-shrink:0;
+  object-fit:cover; overflow:hidden;
+  background:linear-gradient(135deg,#E8EDF5,#CDD5E0);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  position:relative;
+}
+.thumb-overlay {
+  position:absolute; inset:0; border-radius:13px;
+  background:linear-gradient(135deg,rgba(0,0,0,0.03),rgba(0,0,0,0.08));
+}
+
+/* Card content */
+.scan-content { flex:1; min-width:0; }
+.scan-id {
+  font-family:'Sora',sans-serif;
+  font-size:14px; font-weight:700; color:var(--text);
+  margin-bottom:3px;
+}
+.scan-meta {
+  font-size:11.5px; color:var(--text-3);
+  display:flex; align-items:center; gap:5px;
+  margin-bottom:2px; flex-wrap:wrap;
+}
+.scan-area {
+  font-size:11.5px; color:var(--text-2);
+  font-weight:500; margin-bottom:4px;
+}
+.scan-insight {
+  font-size:11px; color:var(--text-3);
+  display:flex; align-items:center; gap:4px;
+}
+
+/* Risk badge */
+.scan-right {
+  display:flex; flex-direction:column;
+  align-items:flex-end; gap:5px;
+  flex-shrink:0;
+}
+.risk-badge {
+  display:flex; align-items:center; gap:5px;
+  padding:5px 10px;
+  border-radius:40px;
+  font-size:11.5px; font-weight:600;
+  white-space:nowrap;
+}
+.risk-badge.low  { background:var(--mint-lt);  color:var(--mint); }
+.risk-badge.med  { background:var(--amber-lt); color:#B45309; }
+.risk-badge.high { background:var(--rose-lt);  color:var(--rose); }
+.risk-dot { width:6px; height:6px; border-radius:50%; }
+.risk-badge.low  .risk-dot { background:var(--mint); }
+.risk-badge.med  .risk-dot { background:var(--amber); }
+.risk-badge.high .risk-dot { background:var(--rose); }
+
+.conf-text { font-size:10.5px; color:var(--text-3); font-weight:500; }
+.chevron { color:var(--text-3); font-size:14px; margin-top:2px; }
+
+/* EMPTY STATE */
+.empty-state {
+  display:none;
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:48px 20px;
+  text-align:center;
+}
+.empty-icon { font-size:48px; margin-bottom:14px; }
+.empty-title {
+  font-family:'Sora',sans-serif;
+  font-size:18px; font-weight:700; color:var(--text);
+  margin-bottom:6px;
+}
+.empty-sub { font-size:13px; color:var(--text-3); margin-bottom:20px; line-height:1.5; }
+.btn-primary {
+  background:linear-gradient(135deg,var(--mint),#2BA8F5);
+  color:#fff; border:none;
+  padding:13px 28px; border-radius:40px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px; font-weight:600;
+  cursor:pointer; box-shadow:0 6px 20px rgba(23,185,122,0.35);
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.btn-primary:hover { transform:scale(1.04); box-shadow:0 8px 26px rgba(23,185,122,0.45); }
+
+/* BOTTOM CTA */
+.bottom-cta {
+  margin:18px 14px 10px;
+  background:linear-gradient(135deg,#11996A,#1B72CA);
+  border-radius:var(--r);
+  padding:18px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:14px;
+  box-shadow:0 8px 28px rgba(17,153,106,0.28);
+  cursor:pointer;
+}
+.cta-text-wrap {}
+.cta-title {
+  font-family:'Sora',sans-serif;
+  font-size:13.5px; font-weight:700;
+  color:#fff; margin-bottom:2px;
+}
+.cta-sub { font-size:11.5px; color:rgba(255,255,255,0.7); line-height:1.4; }
+.cta-btn {
+  display:flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,0.18);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:40px;
+  padding:10px 14px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12.5px; font-weight:600; color:#fff;
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
+  transition:all 0.2s;
+  backdrop-filter:blur(8px);
+}
+.cta-btn:hover { background:rgba(255,255,255,0.3); }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position:sticky; bottom:0;
+  background:rgba(255,255,255,0.95);
+  backdrop-filter:blur(16px);
+  border-top:0.5px solid var(--border);
+  padding:10px 0 18px;
+  display:flex; justify-content:space-around; align-items:center;
+}
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  cursor:pointer; padding:0 12px;
+}
+.nav-icon { font-size:20px; line-height:1; }
+.nav-label { font-size:10.5px; color:var(--text-3); font-weight:500; }
+.nav-item.active .nav-label { color:var(--violet); font-weight:600; }
+.nav-dot { width:4px; height:4px; border-radius:50%; background:var(--violet); margin-top:-1px; }
+.scan-fab-wrap { display:flex; flex-direction:column; align-items:center; gap:3px; margin-top:-26px; cursor:pointer; }
+.scan-fab {
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg,var(--violet),#8B5CF6);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 20px rgba(108,92,231,0.5);
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.scan-fab:hover { transform:scale(1.08); }
+.scan-fab-label { font-size:10.5px; color:var(--violet); font-weight:600; }
+
+.spacer { height:8px; }
+
+/* Animate in */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.scan-card { animation:fadeUp 0.35s ease both; }
+.scan-card:nth-child(1) { animation-delay:0.05s; }
+.scan-card:nth-child(2) { animation-delay:0.10s; }
+.scan-card:nth-child(3) { animation-delay:0.15s; }
+.scan-card:nth-child(4) { animation-delay:0.20s; }
+.scan-card:nth-child(5) { animation-delay:0.25s; }
+.trend-card { animation:fadeUp 0.35s ease 0.02s both; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="3" width="3" height="9" rx="1" fill="#111827"/>
+        <rect x="4.5" y="2" width="3" height="10" rx="1" fill="#111827"/>
+        <rect x="9" y="0.5" width="3" height="11.5" rx="1" fill="#111827"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#111827" opacity="0.3"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 3C10.5 3 12.7 4.1 14.2 5.9L15.5 4.4C13.6 2.3 11 1 8 1C5 1 2.4 2.3 0.5 4.4L1.8 5.9C3.3 4.1 5.5 3 8 3Z" fill="#111827"/>
+        <path d="M8 6C9.7 6 11.2 6.8 12.2 8L13.5 6.5C12.1 4.9 10.2 4 8 4C5.8 4 3.9 4.9 2.5 6.5L3.8 8C4.8 6.8 6.3 6 8 6Z" fill="#111827"/>
+        <circle cx="8" cy="10" r="1.5" fill="#111827"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#111827" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="17" height="8" rx="2" fill="#111827"/>
+        <path d="M23 4.5v3a1.5 1.5 0 000-3z" fill="#111827" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>History</h1>
+      <p>Your past scans and reports</p>
+    </div>
+    <button class="filter-btn" onclick="toggleFilterPanel()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M3 6h18M7 12h10M11 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- FILTER CHIPS -->
+  <div class="chips-wrap">
+    <div class="chips-row" id="chipsRow">
+      <div class="fchip active-violet active" data-filter="all" onclick="filterScans('all', this)">
+        All Scans
+      </div>
+      <div class="fchip" data-filter="low" onclick="filterScans('low', this)">
+        <div class="fdot" style="background:var(--mint)"></div>
+        Low Risk
+      </div>
+      <div class="fchip" data-filter="med" onclick="filterScans('med', this)">
+        <div class="fdot" style="background:var(--amber)"></div>
+        Medium Risk
+      </div>
+      <div class="fchip" data-filter="high" onclick="filterScans('high', this)">
+        <div class="fdot" style="background:var(--rose)"></div>
+        High Risk
+      </div>
+    </div>
+  </div>
+
+  <!-- TREND CARD -->
+  <div class="trend-card" onclick="alert('View detailed trend chart')">
+    <div class="trend-icon-wrap">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <polyline points="3,17 8,12 12,14 17,8 21,10" stroke="#17B97A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="17,8 21,8 21,12" stroke="#17B97A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="trend-body">
+      <div class="trend-eyebrow">Your Recent Trend</div>
+      <div class="trend-main">
+        Stable
+        <span class="trend-badge">
+          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+            <path d="M2 8l6-6M5 2h3v3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </div>
+      <div class="trend-sub">Your oral health is stable. Keep monitoring.</div>
+    </div>
+    <div class="view-trend-btn">
+      <div class="vt-inner">
+        View Trend
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M5 19L19 5M12 5h7v7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCAN LIST HEADER -->
+  <div class="section-hd">
+    <div class="section-hd-title">Recent Scans</div>
+    <button class="sort-btn" onclick="toggleSort(this)">
+      Latest First
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- SCAN LIST -->
+  <div class="scan-list" id="scanList">
+    <!-- Injected by JS -->
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">🦷</div>
+    <div class="empty-title">No scans yet</div>
+    <div class="empty-sub">Your scan history will appear here.<br>Start your first scan to get insights.</div>
+    <button class="btn-primary" onclick="alert('Start new scan')">Start your first scan</button>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="bottom-cta" onclick="alert('Start New Scan')">
+    <div class="cta-text-wrap">
+      <div class="cta-title">Regular scans help in early detection</div>
+      <div class="cta-sub">Stay consistent for better oral health</div>
+    </div>
+    <button class="cta-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="6" width="20" height="14" rx="3" stroke="white" stroke-width="2"/>
+        <circle cx="12" cy="13" r="3.5" stroke="white" stroke-width="2"/>
+        <path d="M8 6V5a2 2 0 012-2h4a2 2 0 012 2v1" stroke="white" stroke-width="2"/>
+      </svg>
+      Start New Scan
+    </button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navClick(this)">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="navClick(this)">
+      <div class="nav-icon">💬</div>
+      <div class="nav-label">Care</div>
+    </div>
+    <div class="scan-fab-wrap" onclick="alert('Start Scan')">
+      <div class="scan-fab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="6" width="20" height="14" rx="3" stroke="white" stroke-width="2"/>
+          <circle cx="12" cy="13" r="3.5" stroke="white" stroke-width="2"/>
+          <path d="M8 6V5a2 2 0 012-2h4a2 2 0 012 2v1" stroke="white" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="scan-fab-label">Scan</div>
+    </div>
+    <div class="nav-item active" onclick="navClick(this)">
+      <div class="nav-icon">📋</div>
+      <div class="nav-label">History</div>
+      <div class="nav-dot"></div>
+    </div>
+    <div class="nav-item" onclick="navClick(this)">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── SCAN DATA ─────────────────────────────
+const scans = [
+  {
+    id: 12, date: 'May 14, 2025', time: '09:30 AM',
+    area: 'Left cheek', risk: 'low', confidence: 'High confidence',
+    insight: 'No concerning signs detected',
+    emoji: '😊', insightIcon: '✅'
+  },
+  {
+    id: 11, date: 'May 10, 2025', time: '08:45 AM',
+    area: 'Inner lower lip', risk: 'med', confidence: 'Moderate confidence',
+    insight: 'Monitor for any changes',
+    emoji: '😐', insightIcon: '👀'
+  },
+  {
+    id: 10, date: 'May 5, 2025', time: '11:20 AM',
+    area: 'Tongue – Left side', risk: 'high', confidence: 'High confidence',
+    insight: 'Consult a specialist recommended',
+    emoji: '😟', insightIcon: '⚠️'
+  },
+  {
+    id: 9, date: 'Apr 28, 2025', time: '07:15 PM',
+    area: 'Right cheek', risk: 'low', confidence: 'High confidence',
+    insight: 'No concerning signs detected',
+    emoji: '😊', insightIcon: '✅'
+  },
+  {
+    id: 8, date: 'Apr 21, 2025', time: '10:05 AM',
+    area: 'Upper gum line', risk: 'med', confidence: 'Moderate confidence',
+    insight: 'Minor inflammation noted',
+    emoji: '😐', insightIcon: '👀'
+  },
+  {
+    id: 7, date: 'Apr 14, 2025', time: '09:00 AM',
+    area: 'Floor of mouth', risk: 'low', confidence: 'High confidence',
+    insight: 'No concerning signs detected',
+    emoji: '😊', insightIcon: '✅'
+  },
+];
+
+const riskLabels = { low: 'Low Risk', med: 'Medium Risk', high: 'High Risk' };
+
+let currentFilter = 'all';
+let sortAsc = false; // newest first by default
+
+function buildCard(scan) {
+  const riskClass = scan.risk;
+  const badgeClass = scan.risk;
+  return `
+    <div class="scan-card ${riskClass}" onclick="openScan(${scan.id})" style="animation-delay:${Math.random()*0.15}s">
+      <div class="scan-thumb">
+        <span>${scan.emoji}</span>
+        <div class="thumb-overlay"></div>
+      </div>
+      <div class="scan-content">
+        <div class="scan-id">Scan #${scan.id}</div>
+        <div class="scan-meta">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="3" stroke="#9CA3AF" stroke-width="2"/>
+            <path d="M3 10h18M8 2v4M16 2v4" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          ${scan.date} · ${scan.time}
+        </div>
+        <div class="scan-area">📍 ${scan.area}</div>
+        <div class="scan-insight">${scan.insightIcon} ${scan.insight}</div>
+      </div>
+      <div class="scan-right">
+        <div class="risk-badge ${badgeClass}">
+          <div class="risk-dot"></div>
+          ${riskLabels[scan.risk]}
+        </div>
+        <div class="conf-text">${scan.confidence}</div>
+        <div class="chevron">›</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderList() {
+  let filtered = currentFilter === 'all'
+    ? [...scans]
+    : scans.filter(s => s.risk === currentFilter);
+
+  if (sortAsc) filtered.reverse();
+
+  const list = document.getElementById('scanList');
+  const empty = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    list.style.display = 'none';
+    empty.style.display = 'flex';
+  } else {
+    list.style.display = 'flex';
+    empty.style.display = 'none';
+    list.innerHTML = filtered.map(buildCard).join('');
+  }
+}
+
+function filterScans(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('.fchip').forEach(c => {
+    c.classList.remove('active','active-violet','active-amber','active-rose');
+  });
+  if (filter === 'all')  el.classList.add('active','active-violet');
+  if (filter === 'low')  el.classList.add('active');
+  if (filter === 'med')  el.classList.add('active','active-amber');
+  if (filter === 'high') el.classList.add('active','active-rose');
+  renderList();
+}
+
+function toggleSort(btn) {
+  sortAsc = !sortAsc;
+  btn.innerHTML = sortAsc
+    ? `Oldest First <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    : `Latest First <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  renderList();
+}
+
+function openScan(id) {
+  const scan = scans.find(s => s.id === id);
+  if (!scan) return;
+  alert(`Scan #${scan.id}\n${scan.date} · ${scan.time}\nArea: ${scan.area}\nRisk: ${riskLabels[scan.risk]}\nConfidence: ${scan.confidence}\n\n${scan.insight}`);
+}
+
+function toggleFilterPanel() {
+  alert('Advanced filter panel:\n• Date range\n• Scan area\n• Risk level\n• Confidence');
+}
+
+function navClick(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-dot').forEach(d => d.remove());
+  el.classList.add('active');
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot';
+  el.appendChild(dot);
+}
+
+// INIT
+renderList();
+</script>
+</body>
+</html>

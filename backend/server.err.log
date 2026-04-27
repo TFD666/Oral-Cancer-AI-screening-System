@@ -1,0 +1,100 @@
+INFO:     Started server process [5048]
+INFO:     Waiting for application startup.
+2026-04-27 12:21:39,060  INFO      app.main  Using device: cpu
+2026-04-27 12:21:40,087  INFO      app.main  Both models loaded and ready
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-04-27 12:56:13,857  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:56:14,762  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Ctimestamp%2Cprediction%2Cconfidence%2Crisk_level%2Crecommendation%2Cimage_path%2Cheatmap_path&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 12:56:15,629  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/809fc415-41b8-41e3-91ea-449039161b8c_WhatsApp%20Image%202025-10-30%20at%2005.38.02_2aef00fd.jpg "HTTP/2 200 OK"
+2026-04-27 12:56:16,499  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/809fc415-41b8-41e3-91ea-449039161b8c_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:56:16,835  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:56:17,171  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Ctimestamp%2Cprediction%2Cconfidence%2Crisk_level%2Crecommendation%2Cimage_path%2Cheatmap_path&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 12:56:17,689  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/809fc415-41b8-41e3-91ea-449039161b8c_WhatsApp%20Image%202025-10-30%20at%2005.38.02_2aef00fd.jpg "HTTP/2 200 OK"
+2026-04-27 12:56:17,935  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/809fc415-41b8-41e3-91ea-449039161b8c_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:57:04,470  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:57:04,887  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/patients?select=id&created_by=eq.twofaceddevil666%40gmail.com&order=created_at.asc&limit=1 "HTTP/2 200 OK"
+2026-04-27 12:57:05,196  INFO      app.routers.predict  Starting inference for user=twofaceddevil666@gmail.com, file=WhatsApp Image 2025-10-30 at 05.35.21_2f615a08.jpg
+2026-04-27 12:57:06,812  INFO      app.routers.predict  Inference complete: prediction=Non-Cancer, confidence=0.9957, risk=Low
+2026-04-27 12:57:06,813  INFO      app.storage.supabase_storage  Uploading 77736 bytes to bucket=uploads path=055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp Image 2025-10-30 at 05.35.21_2f615a08.jpg
+2026-04-27 12:57:08,063  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/uploads/055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp%20Image%202025-10-30%20at%2005.35.21_2f615a08.jpg "HTTP/2 200 OK"
+2026-04-27 12:57:08,071  INFO      app.routers.predict  Uploaded original image: bucket=uploads path=055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp Image 2025-10-30 at 05.35.21_2f615a08.jpg
+2026-04-27 12:57:08,072  INFO      app.storage.supabase_storage  Uploading 83352 bytes to bucket=heatmaps path=055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png
+2026-04-27 12:57:09,001  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/heatmaps/055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:57:09,003  INFO      app.routers.predict  Uploaded heatmap: bucket=heatmaps path=055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png
+2026-04-27 12:57:09,497  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp%20Image%202025-10-30%20at%2005.35.21_2f615a08.jpg "HTTP/2 200 OK"
+2026-04-27 12:57:09,738  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:57:09,739  INFO      app.routers.predict  Generated signed URLs
+2026-04-27 12:57:10,087  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions "HTTP/2 201 Created"
+2026-04-27 12:57:10,089  INFO      app.routers.predict  Prediction saved to DB: id=055f5f9b-f956-4947-83e3-fe4e3b094e85
+2026-04-27 12:57:10,481  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:57:10,810  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.055f5f9b-f956-4947-83e3-fe4e3b094e85&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 12:57:11,054  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp%20Image%202025-10-30%20at%2005.35.21_2f615a08.jpg "HTTP/2 200 OK"
+2026-04-27 12:57:11,291  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:57:11,618  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:57:11,944  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.055f5f9b-f956-4947-83e3-fe4e3b094e85&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 12:57:12,440  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp%20Image%202025-10-30%20at%2005.35.21_2f615a08.jpg "HTTP/2 200 OK"
+2026-04-27 12:57:12,958  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:58:39,363  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:58:40,033  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/patients?select=id&created_by=eq.twofaceddevil666%40gmail.com&order=created_at.asc&limit=1 "HTTP/2 200 OK"
+2026-04-27 12:58:40,041  INFO      app.routers.predict  Starting inference for user=twofaceddevil666@gmail.com, file=ZungenCa2a.jpg
+2026-04-27 12:58:40,885  INFO      app.routers.predict  Inference complete: prediction=Cancer, confidence=0.9626, risk=High
+2026-04-27 12:58:40,886  INFO      app.storage.supabase_storage  Uploading 36328 bytes to bucket=uploads path=54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg
+2026-04-27 12:58:41,771  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 12:58:41,773  INFO      app.routers.predict  Uploaded original image: bucket=uploads path=54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg
+2026-04-27 12:58:41,775  INFO      app.storage.supabase_storage  Uploading 86791 bytes to bucket=heatmaps path=54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png
+2026-04-27 12:58:43,022  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:58:43,027  INFO      app.routers.predict  Uploaded heatmap: bucket=heatmaps path=54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png
+2026-04-27 12:58:43,270  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 12:58:43,508  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:58:43,510  INFO      app.routers.predict  Generated signed URLs
+2026-04-27 12:58:43,862  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions "HTTP/2 201 Created"
+2026-04-27 12:58:43,862  INFO      app.routers.predict  Prediction saved to DB: id=54b2e5b6-188d-4a25-bd95-2f856e550368
+2026-04-27 12:58:44,210  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:58:44,535  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.54b2e5b6-188d-4a25-bd95-2f856e550368&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 12:58:45,027  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 12:58:45,610  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:58:45,946  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:58:46,274  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.54b2e5b6-188d-4a25-bd95-2f856e550368&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 12:58:46,519  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 12:58:46,749  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:58:57,680  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:58:58,090  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.055f5f9b-f956-4947-83e3-fe4e3b094e85&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 12:58:58,745  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp%20Image%202025-10-30%20at%2005.35.21_2f615a08.jpg "HTTP/2 200 OK"
+2026-04-27 12:58:59,326  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:58:59,656  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:58:59,974  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.055f5f9b-f956-4947-83e3-fe4e3b094e85&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 12:59:00,551  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/055f5f9b-f956-4947-83e3-fe4e3b094e85_WhatsApp%20Image%202025-10-30%20at%2005.35.21_2f615a08.jpg "HTTP/2 200 OK"
+2026-04-27 12:59:00,796  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/055f5f9b-f956-4947-83e3-fe4e3b094e85_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:59:10,828  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:59:11,825  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Ctimestamp%2Cprediction%2Cconfidence%2Crisk_level%2Crecommendation%2Cimage_path%2Cheatmap_path&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 12:59:12,742  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 12:59:13,255  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 12:59:13,583  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 12:59:13,907  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Ctimestamp%2Cprediction%2Cconfidence%2Crisk_level%2Crecommendation%2Cimage_path%2Cheatmap_path&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 12:59:14,397  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 12:59:14,634  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 13:17:16,286  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:17:17,523  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Cpatient_id%2Ctimestamp%2Cprediction%2Crisk_level%2Cconfidence%2Crecommendation&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 13:17:17,870  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:17:18,193  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Cpatient_id%2Ctimestamp%2Cprediction%2Crisk_level%2Cconfidence%2Crecommendation&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 13:17:21,209  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:17:21,677  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.54b2e5b6-188d-4a25-bd95-2f856e550368&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 13:17:22,784  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 13:17:23,484  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 13:17:23,946  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:17:24,420  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=%2A&id=eq.54b2e5b6-188d-4a25-bd95-2f856e550368&created_by=eq.twofaceddevil666%40gmail.com "HTTP/2 200 OK"
+2026-04-27 13:17:24,654  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 13:17:24,900  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 13:18:54,547  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:18:55,762  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Cpatient_id%2Ctimestamp%2Cprediction%2Crisk_level%2Cconfidence%2Crecommendation&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 13:18:56,096  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:18:56,425  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Cpatient_id%2Ctimestamp%2Cprediction%2Crisk_level%2Cconfidence%2Crecommendation&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 13:20:26,150  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:20:26,792  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Ctimestamp%2Cprediction%2Cconfidence%2Crisk_level%2Crecommendation%2Cimage_path%2Cheatmap_path&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 13:20:27,690  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 13:20:28,510  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"
+2026-04-27 13:20:28,869  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2026-04-27 13:20:29,204  INFO      httpx  HTTP Request: GET https://xslpozhniiknyasptebw.supabase.co/rest/v1/predictions?select=id%2Ctimestamp%2Cprediction%2Cconfidence%2Crisk_level%2Crecommendation%2Cimage_path%2Cheatmap_path&created_by=eq.twofaceddevil666%40gmail.com&order=timestamp.desc "HTTP/2 200 OK"
+2026-04-27 13:20:30,262  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/uploads/54b2e5b6-188d-4a25-bd95-2f856e550368_ZungenCa2a.jpg "HTTP/2 200 OK"
+2026-04-27 13:20:30,586  INFO      httpx  HTTP Request: POST https://xslpozhniiknyasptebw.supabase.co/storage/v1/object/sign/heatmaps/54b2e5b6-188d-4a25-bd95-2f856e550368_heatmap.png "HTTP/2 200 OK"

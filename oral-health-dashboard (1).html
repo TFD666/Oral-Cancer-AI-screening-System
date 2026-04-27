@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Oral Health Assistant – Home Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Sora:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─────────────────────────────────────────────
+       TOKENS & RESET
+    ───────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --mint: #E8F8F3;
+      --mint-mid: #52C9A0;
+      --mint-dark: #1A9E75;
+      --soft-bg: #F5F7FA;
+      --card-bg: #FFFFFF;
+      --text-main: #1B2D3E;
+      --text-sub: #7A8FA0;
+      --border: rgba(0, 0, 0, 0.06);
+      --radius: 20px;
+      /* Risk colours – swap dynamically via JS */
+      --risk-color: #52C9A0;      /* green = low risk  */
+      --risk-bg:    #E8F8F3;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #E8EDF2;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 0 60px;
+    }
+
+    /* ─────────────────────────────────────────────
+       APP SHELL  (max-width keeps it mobile-first)
+    ───────────────────────────────────────────── */
+    .app {
+      background: var(--soft-bg);
+      width: 100%;
+      max-width: 390px;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.14);
+      position: relative;
+    }
+
+    /* ─────────────────────────────────────────────
+       1 · HEADER
+    ───────────────────────────────────────────── */
+    .header {
+      padding: 28px 20px 14px;
+      background: var(--card-bg);
+      border-bottom: 0.5px solid var(--border);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .app-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--mint-dark);
+      text-transform: uppercase;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--mint-mid), #3BA8F5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .greeting {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .greeting-sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* ─────────────────────────────────────────────
+       2 · HEALTH WAVE CARD
+    ───────────────────────────────────────────── */
+    .wave-card {
+      margin: 16px 20px 0;
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      overflow: visible;
+      position: relative;
+    }
+    .wave-inner {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    /* Color zone bands behind the wave */
+    .wave-zones {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      /* vertical bands: green left → yellow → orange → red right */
+      background: linear-gradient(to right,
+        #D6F5E9 0%,
+        #B8EEDB 18%,
+        #FEF4C4 36%,
+        #FFE09A 50%,
+        #FFD0A0 64%,
+        #FFBCAA 78%,
+        #FFB0A8 100%
+      );
+    }
+    /* Horizontal risk zone dividers */
+    .wave-zone-labels {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 14px;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .zone-tag {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+    .wave-label {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #3a5a4a;
+      text-transform: uppercase;
+      z-index: 7;
+      background: rgba(255,255,255,0.55);
+      padding: 3px 9px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .wave-svg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+    }
+    /* Dots are positioned absolutely via JS */
+    #dotsContainer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .scan-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2.5px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      cursor: pointer;
+      pointer-events: all;
+      transition: transform 0.15s;
+    }
+    .scan-dot:hover { transform: scale(1.35); }
+
+    .more-scans {
+      position: absolute;
+      bottom: 10px;
+      right: 14px;
+      font-size: 12px;
+      color: var(--mint-dark);
+      font-weight: 500;
+      cursor: pointer;
+      z-index: 5;
+      background: rgba(255,255,255,0.88);
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: none;
+    }
+
+    /* Dot popup */
+    .dot-popup {
+      position: absolute;
+      background: #fff;
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+      z-index: 20;
+      min-width: 140px;
+      cursor: pointer;
+      display: none;
+    }
+    .dot-popup.active { display: block; }
+    .dot-popup .pop-id {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+    .dot-popup .pop-sub {
+      color: var(--text-sub);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .dot-popup .pop-hint {
+      font-size: 10px;
+      color: var(--mint-dark);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* ─────────────────────────────────────────────
+       3 · STATUS TEXT
+    ───────────────────────────────────────────── */
+    .status-block {
+      margin: 12px 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .risk-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--risk-bg);
+      border-radius: 40px;
+      padding: 6px 14px 6px 8px;
+    }
+    .risk-dot-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--risk-color);
+      flex-shrink: 0;
+    }
+    .risk-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mint-dark);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .status-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    /* ─────────────────────────────────────────────
+       4 · LAST SCAN CARD  (enriched)
+    ───────────────────────────────────────────── */
+    .last-scan-card {
+      margin: 14px 20px 0;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      overflow: hidden;
+    }
+    /* Colored top strip based on risk */
+    .scan-card-stripe {
+      height: 4px;
+      background: linear-gradient(to right, var(--risk-color), #3BA8F5);
+      width: 100%;
+    }
+    .scan-card-body {
+      padding: 16px 18px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .scan-risk-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .scan-risk-badge {
+      font-family: 'Sora', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .confidence-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: #E8F8F3;
+      color: var(--mint-dark);
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+    .scan-date-badge {
+      font-size: 11px;
+      color: var(--text-sub);
+      background: var(--soft-bg);
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    /* Stats row */
+    .scan-stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 13px;
+    }
+    .stat-box {
+      background: var(--soft-bg);
+      border-radius: 12px;
+      padding: 10px 10px 8px;
+      text-align: center;
+    }
+    .stat-icon { font-size: 15px; margin-bottom: 2px; }
+    .stat-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 9px;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+    /* Findings list */
+    .findings-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    .findings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 13px;
+    }
+    .finding-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text-main);
+    }
+    .finding-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .finding-area {
+      font-weight: 500;
+      min-width: 90px;
+    }
+    .finding-status {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+    /* Recommendation box */
+    .rec-box {
+      background: linear-gradient(135deg, #F0FAF7, #EAF4FF);
+      border-radius: 12px;
+      padding: 10px 13px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .rec-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .rec-text {
+      font-size: 12.5px;
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+    .rec-text strong { font-weight: 600; color: var(--mint-dark); }
+    /* Card footer */
+    .scan-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scan-tip {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    /* ─────────────────────────────────────────────
+       SHARED BUTTON STYLES
+    ───────────────────────────────────────────── */
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mint-dark);
+      background: transparent;
+      border: 1px solid var(--mint-dark);
+      border-radius: 40px;
+      padding: 7px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-outline:hover { background: var(--mint); }
+
+    /* ─────────────────────────────────────────────
+       5 · START SCAN BUTTON (Primary CTA)
+    ───────────────────────────────────────────── */
+    .scan-btn-wrap { margin: 16px 20px 0; }
+
+    .scan-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 16px;
+      background: linear-gradient(135deg, #2DC48A, #1A7FCA);
+      border: none;
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .scan-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    }
+    .scan-btn-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .pulse-ring {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.45);
+      animation: pulse-out 2s ease-out infinite;
+      pointer-events: none;
+    }
+    @keyframes pulse-out {
+      0%   { transform: scale(1);   opacity: 0.85; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .scan-btn-text { text-align: left; }
+    .scan-btn-label {
+      font-family: 'Sora', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      display: block;
+      line-height: 1.1;
+    }
+    .scan-btn-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.72);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ─────────────────────────────────────────────
+       6 · BOTTOM 2-COL CARDS (Daily Check + History)
+    ───────────────────────────────────────────── */
+    .bottom-cards {
+      margin: 14px 20px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .mini-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      padding: 16px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .mini-card-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .mini-card-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+    .mini-card-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .btn-mini {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mint-dark);
+      background: var(--mint);
+      border: none;
+      border-radius: 40px;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    .heartbeat-bg {
+      position: absolute;
+      bottom: 10px;
+      right: 8px;
+      opacity: 0.14;
+    }
+
+    /* ─────────────────────────────────────────────
+       7 · REMINDER CARD (conditional)
+    ───────────────────────────────────────────── */
+    .reminder-card {
+      margin: 14px 20px 0;
+      background: #FFF8EC;
+      border-radius: var(--radius);
+      border: 0.5px solid rgba(239,159,39,0.28);
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .reminder-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: #FAEEDA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .reminder-text { flex: 1; }
+    .reminder-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #855010;
+      margin-bottom: 3px;
+    }
+    .reminder-sub {
+      font-size: 12px;
+      color: #B86A15;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .btn-amber {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: #855010;
+      background: #FAEEDA;
+      border: none;
+      border-radius: 40px;
+      padding: 6px 14px;
+      cursor: pointer;
+    }
+
+    /* ─────────────────────────────────────────────
+       8 · TIP OF THE DAY
+    ───────────────────────────────────────────── */
+    .tip-card {
+      margin: 14px 20px 0;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .tip-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #EEF4FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .tip-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #5B8BDF;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .tip-text {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.55;
+    }
+
+    /* Bottom padding spacer */
+    .spacer { height: 28px; }
+  </style>
+</head>
+
+<body>
+<div class="app" id="app">
+
+  <!-- ── 1. HEADER ─────────────────────────────── -->
+  <header class="header">
+    <div class="header-top">
+      <span class="app-name">Oral Health Assistant</span>
+      <!-- TODO: replace "AK" with user initials from session -->
+      <div class="avatar" id="userAvatar">AK</div>
+    </div>
+    <!-- TODO: derive greeting (Morning / Afternoon / Evening) dynamically -->
+    <div class="greeting">Good Morning 👋</div>
+    <div class="greeting-sub">Take care of your oral health today</div>
+  </header>
+
+  <!-- ── 2. HEALTH WAVE CONTAINER ───────────────── -->
+  <div class="wave-card">
+    <div class="wave-inner" id="waveContainer">
+      <!-- Color zone bands background -->
+      <div class="wave-zones"></div>
+
+      <span class="wave-label">Health Wave · Last 5 Scans</span>
+
+      <svg class="wave-svg" id="waveSVG"
+           viewBox="0 0 350 220"
+           preserveAspectRatio="none"
+           xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="waveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.72"/>
+          </linearGradient>
+          <filter id="waveBlur">
+            <feGaussianBlur stdDeviation="0.8"/>
+          </filter>
+        </defs>
+        <!-- White frosted fill below the wave line -->
+        <path id="waveFill" fill="url(#waveGrad)"/>
+        <!-- Subtle second wave for depth -->
+        <path id="waveFill2" fill="rgba(255,255,255,0.1)"/>
+        <!-- Main wave line -->
+        <path id="waveLine" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" stroke-linecap="round" filter="url(#waveBlur)"/>
+        <!-- Bright top highlight line -->
+        <path id="waveLineTop" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-linecap="round" stroke-dasharray="4 3"/>
+      </svg>
+
+      <!-- Zone labels -->
+      <div class="wave-zone-labels">
+        <span class="zone-tag" style="color:#1A9E75;">● Low</span>
+        <span class="zone-tag" style="color:#C68A00;">● Moderate</span>
+        <span class="zone-tag" style="color:#C84B30;">● High</span>
+      </div>
+
+      <!-- Dots injected here by buildWave() -->
+      <div id="dotsContainer"></div>
+
+      <!-- "+N more →" link -->
+      <span class="more-scans" id="moreScans"></span>
+
+      <!-- Popup shown on dot tap/click -->
+      <div class="dot-popup" id="dotPopup">
+        <div class="pop-id"  id="popId">Scan #12</div>
+        <div class="pop-sub" id="popDate">Jun 18, 2025<br>9:42 AM</div>
+        <div class="pop-hint">Tap to view full report →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. STATUS TEXT ─────────────────────────── -->
+  <div class="status-block">
+    <div class="risk-pill">
+      <div class="risk-dot-indicator"></div>
+      <!-- TODO: bind riskLevel from latest scan -->
+      <span class="risk-label" id="riskLabel">Low Risk</span>
+    </div>
+    <span class="status-desc" id="statusDesc">No strong indicators detected</span>
+  </div>
+
+  <!-- ── 4. LAST SCAN CARD ──────────────────────── -->
+  <div class="last-scan-card">
+    <div class="scan-card-stripe" id="scanCardStripe"></div>
+    <div class="scan-card-body">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Last Scan Summary</div>
+          <div class="scan-risk-row">
+            <span class="scan-risk-badge" id="lastRiskBadge">Low Risk</span>
+            <span class="confidence-badge" id="lastConfidence">89% Confidence</span>
+          </div>
+        </div>
+        <span class="scan-date-badge" id="lastScanDate">Today, 9:42 AM</span>
+      </div>
+
+      <!-- Stats row -->
+      <div class="scan-stats-row">
+        <div class="stat-box">
+          <div class="stat-icon">🆔</div>
+          <div class="stat-value" id="statScanId">#12</div>
+          <div class="stat-label">Scan ID</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-value" id="statConfidencePct">89%</div>
+          <div class="stat-label">Confidence</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">📍</div>
+          <div class="stat-value" id="statAreas">4</div>
+          <div class="stat-label">Areas Scanned</div>
+        </div>
+      </div>
+
+      <!-- Findings -->
+      <div class="findings-title">Detected Areas</div>
+      <div class="findings-list" id="findingsList">
+        <!-- injected by JS -->
+      </div>
+
+      <!-- Recommendation -->
+      <div class="rec-box" id="recBox">
+        <div class="rec-icon">💡</div>
+        <div class="rec-text" id="recText">
+          <strong>Recommendation:</strong> No concerning signs detected. Maintain oral hygiene consistently for best results.
+        </div>
+      </div>
+
+      <div class="scan-card-footer">
+        <button class="btn-outline" onclick="navigate('scan-detail')">View Full Report →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 5. START SCAN (primary CTA) ───────────── -->
+  <div class="scan-btn-wrap">
+    <!-- TODO: navigate to /scan/new on click -->
+    <button class="scan-btn" onclick="navigate('new-scan')">
+      <div class="scan-btn-icon">
+        <div class="pulse-ring"></div>
+        <!-- Camera / scan icon -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="6" width="20" height="14" rx="3" stroke="white" stroke-width="2"/>
+          <circle cx="12" cy="13" r="3.5" stroke="white" stroke-width="2"/>
+          <path d="M8 6V5a2 2 0 012-2h4a2 2 0 012 2v1" stroke="white" stroke-width="2"/>
+          <circle cx="18" cy="9" r="1.5" fill="white"/>
+        </svg>
+      </div>
+      <div class="scan-btn-text">
+        <span class="scan-btn-label">Start Scan</span>
+        <span class="scan-btn-sub">Takes about 30 seconds</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- ── 6. DAILY CHECK + HISTORY CARDS ────────── -->
+  <div class="bottom-cards">
+    <!-- Daily Check -->
+    <div class="mini-card">
+      <div class="mini-card-icon" style="background:#EAF3DE;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3v9m0 0l-4-4m4 4l4-4" stroke="#3B6D11" stroke-width="2" stroke-linecap="round"/>
+          <path d="M5 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#3B6D11" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="mini-card-title">Daily Check</div>
+      <div class="mini-card-sub">Quick 10-second health check</div>
+      <!-- TODO: navigate to /daily-check -->
+      <button class="btn-mini" onclick="navigate('daily-check')">Start</button>
+      <!-- Decorative heartbeat bg element -->
+      <svg class="heartbeat-bg" width="62" height="28" viewBox="0 0 62 28">
+        <polyline
+          points="0,14 10,14 15,4 20,24 25,14 30,14 35,8 40,20 45,14 62,14"
+          fill="none" stroke="#52C9A0" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- History -->
+    <div class="mini-card" style="background:linear-gradient(135deg,#F0F5FF,#E8F0FF);border-color:rgba(56,107,229,0.1);">
+      <div class="mini-card-icon" style="background:rgba(56,107,229,0.12);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"
+                stroke="#386BE5" stroke-width="2"/>
+          <path d="M12 8v4l3 3" stroke="#386BE5" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="mini-card-title" style="color:#1B3A8C;">History</div>
+      <div class="mini-card-sub"  style="color:#5070C0;">View past scan reports</div>
+      <!-- TODO: navigate to /history -->
+      <button class="btn-mini"
+              style="color:#1B3A8C;background:rgba(56,107,229,0.12);"
+              onclick="navigate('history')">View All</button>
+    </div>
+  </div>
+
+  <!-- ── 7. REMINDER CARD (conditional) ────────── -->
+  <!--
+    Logic: show this card ONLY when daysSinceLastScan >= 3.
+    TODO: bind daysSinceLastScan from user data; hide/show via JS or server-side render.
+    The JS block below handles this with the DEMO_DAYS_SINCE_LAST_SCAN constant.
+  -->
+  <div class="reminder-card" id="reminderCard" style="display:none;">
+    <div class="reminder-icon">⏰</div>
+    <div class="reminder-text">
+      <div class="reminder-title">Time to check in!</div>
+      <div class="reminder-sub" id="reminderSub">
+        You haven't scanned in 3 days. A quick check takes under a minute.
+      </div>
+      <!-- TODO: navigate to /daily-check -->
+      <button class="btn-amber" onclick="navigate('daily-check')">Do Quick Check</button>
+    </div>
+  </div>
+
+  <!-- ── 8. TIP OF THE DAY ──────────────────────── -->
+  <div class="tip-card">
+    <div class="tip-icon-wrap">💡</div>
+    <div>
+      <div class="tip-label">Tip of the Day</div>
+      <!-- TODO: fetch tip from API /tips/today -->
+      <p class="tip-text" id="tipText">
+        Persistent ulcers lasting more than 2 weeks should be evaluated by a dentist or doctor promptly.
+      </p>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div><!-- /.app -->
+
+<script>
+  /*
+   * ════════════════════════════════════════════════
+   *  DEMO DATA  ── replace with real API responses
+   * ════════════════════════════════════════════════
+   *
+   *  scanHistory  : array of last ≤5 scan objects (newest first)
+   *  totalScans   : total scan count for the user
+   *  daysSince    : days since the user's last scan
+   */
+  const DEMO_SCAN_HISTORY = [
+    { id: 12, date: 'Jun 18, 2025', time: '9:42 AM', risk: 0.15,
+      confidence: 89,
+      findings: [
+        { area: 'Upper Left',   status: 'Normal',        color: '#52C9A0' },
+        { area: 'Upper Right',  status: 'Normal',        color: '#52C9A0' },
+        { area: 'Lower Left',   status: 'Normal',        color: '#52C9A0' },
+        { area: 'Lower Right',  status: 'Watch',         color: '#EFA027' },
+      ],
+      recommendation: 'No concerning signs detected. Maintain oral hygiene consistently for best results.'
+    },
+    { id: 11, date: 'Jun 14, 2025', time: '8:10 AM', risk: 0.22,
+      confidence: 84, findings: [], recommendation: 'Minor inflammation on lower right. Increase brushing frequency.'
+    },
+    { id: 10, date: 'Jun 10, 2025', time: '10:55 AM', risk: 0.38,
+      confidence: 91, findings: [], recommendation: 'Moderate indicators detected. Consider scheduling a check-up.'
+    },
+    { id: 9,  date: 'Jun 5, 2025',  time: '7:30 AM', risk: 0.55,
+      confidence: 78, findings: [], recommendation: 'Multiple areas flagged. Book a dental appointment soon.'
+    },
+    { id: 8,  date: 'May 29, 2025', time: '9:15 AM', risk: 0.30,
+      confidence: 85, findings: [], recommendation: 'Mild signs detected. Monitor and maintain hygiene.'
+    },
+  ];
+  const DEMO_TOTAL_SCANS        = 17;
+  const DEMO_DAYS_SINCE_LAST_SCAN = 0;   // set to 3+ to show reminder card
+
+  /*
+   * ════════════════════════════════════════════════
+   *  NAVIGATION STUB
+   *  Replace with your router (React Router / Next.js / etc.)
+   * ════════════════════════════════════════════════
+   */
+  function navigate(route, params = {}) {
+    console.log('[navigate]', route, params);
+    // Example: router.push(`/${route}`);
+    // Example for scan detail: router.push(`/scan/${params.id}`);
+    alert(`Navigate → ${route}` + (params.id ? ` #${params.id}` : ''));
+  }
+
+  /*
+   * ════════════════════════════════════════════════
+   *  RISK COLOUR HELPERS
+   * ════════════════════════════════════════════════
+   */
+  function riskColor(r) {
+    if (r < 0.33) return '#52C9A0';   // green
+    if (r < 0.66) return '#EFA027';   // amber
+    return '#E24B4A';                  // red
+  }
+
+  function riskLabel(r) {
+    if (r < 0.33) return 'Low Risk';
+    if (r < 0.66) return 'Medium Risk';
+    return 'High Risk';
+  }
+
+  function riskDesc(r) {
+    if (r < 0.33) return 'No strong indicators detected';
+    if (r < 0.66) return 'Some indicators present – monitor closely';
+    return 'High indicators detected – consult a dentist';
+  }
+
+  function riskFillHex(r) {
+    if (r < 0.33) return { stop1: '#52C9A0', stop2: '#3BA8F5', bg: '#F0FAF7', stroke: '#52C9A0' };
+    if (r < 0.66) return { stop1: '#EFA027', stop2: '#F5A623', bg: '#FFFBF0', stroke: '#EFA027' };
+    return { stop1: '#E24B4A', stop2: '#F58585', bg: '#FFF5F5', stroke: '#E24B4A' };
+  }
+
+  /*
+   * ════════════════════════════════════════════════
+   *  WAVE RENDERING
+   * ════════════════════════════════════════════════
+   */
+  const W = 350, H = 220;
+  const MIN_FILL = 55, MAX_FILL = 175;  // pixel heights from bottom
+  let wavePhase = 0;
+
+  function xPositions(n) {
+    const pad = 24;
+    if (n === 1) return [W / 2];
+    return Array.from({ length: n }, (_, i) => pad + (i / (n - 1)) * (W - pad * 2));
+  }
+
+  function buildYs(scans, phase) {
+    return scans.map((s, i) => {
+      const fill = MIN_FILL + s.risk * (MAX_FILL - MIN_FILL);
+      return H - fill + Math.sin(i * 1.1 + phase) * 8;
+    });
+  }
+
+  function buildPath(xs, ys, close) {
+    let d = `M ${xs[0]} ${ys[0]} `;
+    for (let i = 0; i < xs.length - 1; i++) {
+      const cpx = (xs[i] + xs[i + 1]) / 2;
+      d += `C ${cpx} ${ys[i]}, ${cpx} ${ys[i + 1]}, ${xs[i + 1]} ${ys[i + 1]} `;
+    }
+    if (close) {
+      d += `L ${W} ${H} L 0 ${H} Z`;
+    }
+    return d;
+  }
+
+  function buildPath2(xs, ys, phase2, close) {
+    // Slightly offset secondary wave
+    const ys2 = ys.map((y, i) => y + Math.sin(i * 0.9 + phase2 + 1.5) * 12 + 14);
+    let d = `M ${xs[0]} ${ys2[0]} `;
+    for (let i = 0; i < xs.length - 1; i++) {
+      const cpx = (xs[i] + xs[i + 1]) / 2;
+      d += `C ${cpx} ${ys2[i]}, ${cpx} ${ys2[i + 1]}, ${xs[i + 1]} ${ys2[i + 1]} `;
+    }
+    if (close) d += `L ${W} ${H} L 0 ${H} Z`;
+    return d;
+  }
+
+  function buildWave(scans = DEMO_SCAN_HISTORY, totalScans = DEMO_TOTAL_SCANS) {
+    const latestRisk = scans[0]?.risk ?? 0;
+    const container  = document.getElementById('waveContainer');
+    const dotsDiv    = document.getElementById('dotsContainer');
+
+    // Update wave paths
+    const xs = xPositions(scans.length);
+    const ys = buildYs(scans, wavePhase);
+    document.getElementById('waveFill').setAttribute('d', buildPath(xs, ys, true));
+    document.getElementById('waveFill2').setAttribute('d', buildPath2(xs, ys, wavePhase, true));
+    document.getElementById('waveLine').setAttribute('d', buildPath(xs, ys, false));
+    document.getElementById('waveLineTop').setAttribute('d', buildPath(xs, ys, false));
+
+    // Render dots
+    dotsDiv.innerHTML = '';
+    const cW = container.offsetWidth;
+    const cH = container.offsetHeight;
+    const scaleX = cW / W;
+    const scaleY = cH / H;
+
+    scans.forEach((scan, i) => {
+      const px = xs[i] * scaleX;
+      const py = ys[i] * scaleY;
+      const dot = document.createElement('div');
+      dot.className = 'scan-dot';
+      dot.style.cssText = `
+        left:${px - 7}px;
+        top:${py - 7}px;
+        background:${riskColor(scan.risk)};
+      `;
+      dot.addEventListener('click', e => {
+        e.stopPropagation();
+        showPopup(scan, px, py, cW);
+      });
+      dotsDiv.appendChild(dot);
+    });
+
+    // "+N more" link
+    const moreEl = document.getElementById('moreScans');
+    if (totalScans > 5) {
+      moreEl.style.display = 'block';
+      moreEl.textContent   = `+${totalScans - 5} more →`;
+      moreEl.onclick       = () => navigate('history');
+    }
+
+    // Update status text
+    document.getElementById('riskLabel').textContent  = riskLabel(latestRisk);
+    document.getElementById('statusDesc').textContent = riskDesc(latestRisk);
+
+    // Update CSS risk pill colours
+    const root = document.documentElement;
+    root.style.setProperty('--risk-color', riskColor(latestRisk));
+    root.style.setProperty('--risk-bg', latestRisk < 0.33 ? '#E8F8F3'
+                                      : latestRisk < 0.66 ? '#FFF8EC' : '#FEECEC');
+    const riskLabelEl = document.querySelector('.risk-label');
+    riskLabelEl.style.color = latestRisk < 0.33 ? '#1A9E75'
+                            : latestRisk < 0.66 ? '#855010' : '#991B1B';
+
+    // ── Populate Last Scan Card ──
+    const latest = scans[0];
+    if (latest) {
+      const rc = riskColor(latestRisk);
+      document.getElementById('scanCardStripe').style.background =
+        `linear-gradient(to right, ${rc}, ${latestRisk < 0.33 ? '#3BA8F5' : rc})`;
+
+      document.getElementById('lastRiskBadge').textContent = riskLabel(latestRisk);
+      document.getElementById('lastRiskBadge').style.color = rc;
+
+      const confPct = latest.confidence ?? Math.round(75 + latestRisk * 20);
+      document.getElementById('lastConfidence').textContent = `${confPct}% Confidence`;
+      document.getElementById('lastScanDate').textContent   = `${latest.date} · ${latest.time}`;
+      document.getElementById('statScanId').textContent     = `#${latest.id}`;
+      document.getElementById('statConfidencePct').textContent = `${confPct}%`;
+      document.getElementById('statAreas').textContent =
+        latest.findings?.length ? latest.findings.length : '4';
+
+      // Findings list
+      const findingsList = document.getElementById('findingsList');
+      findingsList.innerHTML = '';
+      (latest.findings && latest.findings.length
+        ? latest.findings
+        : [
+            { area: 'Upper Left',  status: 'Normal', color: '#52C9A0' },
+            { area: 'Upper Right', status: 'Normal', color: '#52C9A0' },
+            { area: 'Lower Left',  status: 'Normal', color: '#52C9A0' },
+            { area: 'Lower Right', status: 'Normal', color: '#52C9A0' },
+          ]
+      ).forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'finding-row';
+        row.innerHTML = `
+          <div class="finding-dot" style="background:${f.color}"></div>
+          <span class="finding-area">${f.area}</span>
+          <span class="finding-status" style="color:${f.color}">${f.status}</span>
+        `;
+        findingsList.appendChild(row);
+      });
+
+      // Recommendation
+      document.getElementById('recText').innerHTML =
+        `<strong>Recommendation:</strong> ${latest.recommendation ?? riskDesc(latestRisk)}`;
+    }
+  }
+
+  /*
+   * ════════════════════════════════════════════════
+   *  DOT POPUP
+   * ════════════════════════════════════════════════
+   */
+  function showPopup(scan, px, py, containerWidth) {
+    const popup = document.getElementById('dotPopup');
+    document.getElementById('popId').textContent   = `Scan #${scan.id}`;
+    document.getElementById('popDate').innerHTML   = `${scan.date}<br>${scan.time}`;
+
+    let left = px + 12;
+    let top  = py - 95;
+    if (left + 148 > containerWidth) left = px - 158;
+    if (top < 8) top = py + 20;
+
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+    popup.classList.add('active');
+
+    // Navigate to scan detail on popup click
+    popup.onclick = () => {
+      popup.classList.remove('active');
+      navigate('scan-detail', { id: scan.id });
+    };
+
+    // Close popup on outside click
+    setTimeout(() => {
+      document.addEventListener('click', () => popup.classList.remove('active'), { once: true });
+    }, 50);
+  }
+
+  /*
+   * ════════════════════════════════════════════════
+   *  SLOW WAVE ANIMATION  (~30 fps, very gentle)
+   * ════════════════════════════════════════════════
+   */
+  let lastFrame = 0;
+  function animateTick(ts) {
+    if (ts - lastFrame > 33) {
+      wavePhase += 0.025;
+      const xs = xPositions(DEMO_SCAN_HISTORY.length);
+      const ys = buildYs(DEMO_SCAN_HISTORY, wavePhase);
+      document.getElementById('waveFill').setAttribute('d', buildPath(xs, ys, true));
+      document.getElementById('waveFill2').setAttribute('d', buildPath2(xs, ys, wavePhase, true));
+      document.getElementById('waveLine').setAttribute('d', buildPath(xs, ys, false));
+      document.getElementById('waveLineTop').setAttribute('d', buildPath(xs, ys, false));
+
+      // Sync dot positions with animated wave
+      const container = document.getElementById('waveContainer');
+      const cW = container.offsetWidth;
+      const cH = container.offsetHeight;
+      const scaleX = cW / W, scaleY = cH / H;
+      document.querySelectorAll('.scan-dot').forEach((dot, i) => {
+        if (i >= xs.length) return;
+        dot.style.left = (xs[i] * scaleX - 7) + 'px';
+        dot.style.top  = (ys[i] * scaleY - 7) + 'px';
+      });
+      lastFrame = ts;
+    }
+    requestAnimationFrame(animateTick);
+  }
+
+  /*
+   * ════════════════════════════════════════════════
+   *  REMINDER CARD
+   * ════════════════════════════════════════════════
+   */
+  function initReminderCard(daysSince = DEMO_DAYS_SINCE_LAST_SCAN) {
+    const card = document.getElementById('reminderCard');
+    if (daysSince >= 3) {
+      card.style.display = 'flex';
+      document.getElementById('reminderSub').textContent =
+        `You haven't scanned in ${daysSince} days. A quick check takes under a minute.`;
+    }
+  }
+
+  /*
+   * ════════════════════════════════════════════════
+   *  INIT
+   * ════════════════════════════════════════════════
+   */
+  window.addEventListener('DOMContentLoaded', () => {
+    buildWave(DEMO_SCAN_HISTORY, DEMO_TOTAL_SCANS);
+    initReminderCard(DEMO_DAYS_SINCE_LAST_SCAN);
+    requestAnimationFrame(animateTick);
+  });
+
+  window.addEventListener('resize', () =>
+    buildWave(DEMO_SCAN_HISTORY, DEMO_TOTAL_SCANS));
+</script>
+</body>
+</html>
