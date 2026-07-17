@@ -12,6 +12,7 @@ frontend/.env
 __pycache__/
 *.pyc
 .venv/
+*.log
 
 # Node
 node_modules/

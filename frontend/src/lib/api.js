@@ -1,7 +1,7 @@
 import { supabase } from "./supabaseClient";
 import { MOCK_RESPONSES, getMockReport } from "./mockData";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 /**
  * DEV MODE flag — when true, skips real API calls and returns mock data.
@@ -12,13 +12,41 @@ const USE_MOCK = false;
 async function getAccessToken() {
   const {
     data: { session },
+    error,
   } = await supabase.auth.getSession();
 
+  if (error) {
+    throw new Error("session-check-failed");
+  }
+
   if (!session?.access_token) {
-    throw new Error("missing-session");
+    const {
+      data: { session: refreshedSession },
+      error: refreshError,
+    } = await supabase.auth.refreshSession();
+
+    if (refreshError || !refreshedSession?.access_token) {
+      throw new Error("missing-session");
+    }
+
+    return refreshedSession.access_token;
   }
 
   return session.access_token;
+}
+
+async function fetchWithToken(path, token, options = {}) {
+  const headers = new Headers(options.headers ?? {});
+  headers.set("Authorization", `Bearer ${token}`);
+
+  if (options.body && !headers.has("Content-Type") && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
 }
 
 /**
@@ -79,18 +107,21 @@ export async function apiFetch(path, options = {}) {
   }
 
   // ---------- REAL MODE ----------
-  const token = await getAccessToken();
-  const headers = new Headers(options.headers ?? {});
-  headers.set("Authorization", `Bearer ${token}`);
+  let token = await getAccessToken();
+  let response = await fetchWithToken(path, token, options);
 
-  if (options.body && !headers.has("Content-Type") && !(options.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
+  // Token may expire between app load and request. Refresh once and retry.
+  if (response.status === 401) {
+    const {
+      data: { session: refreshedSession },
+      error: refreshError,
+    } = await supabase.auth.refreshSession();
+
+    if (!refreshError && refreshedSession?.access_token) {
+      token = refreshedSession.access_token;
+      response = await fetchWithToken(path, token, options);
+    }
   }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
 
   if (!response.ok) {
     const fallback = { error: "Request failed." };

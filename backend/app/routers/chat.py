@@ -521,7 +521,13 @@ def save_message(user_id: str, role: str, message: str, scan_id: Optional[str] =
 # 5. GROQ LLM CALL
 # ─────────────────────────────────────────────────────────────
 
-def call_groq(messages: list[dict]) -> str:
+def call_groq(
+    messages: list[dict],
+    model_override: str | None = None,
+    temperature: float = GROQ_TEMP,
+    top_p: float = GROQ_TOP_P,
+    max_tokens: int = GROQ_MAX_TOKENS,
+) -> str:
     """Call Groq API with the constructed message list."""
     try:
         from groq import Groq
@@ -533,7 +539,7 @@ def call_groq(messages: list[dict]) -> str:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set in .env")
 
     client = Groq(api_key=api_key)
-    model_candidates = list(dict.fromkeys([GROQ_MODEL, *GROQ_FALLBACK_MODELS]))
+    model_candidates = [model_override] if model_override else list(dict.fromkeys([GROQ_MODEL, *GROQ_FALLBACK_MODELS]))
 
     last_error = None
     for model in model_candidates:
@@ -541,9 +547,9 @@ def call_groq(messages: list[dict]) -> str:
             completion = client.chat.completions.create(
                 model=model,
                 messages=messages,
-                temperature=GROQ_TEMP,
-                top_p=GROQ_TOP_P,
-                max_tokens=GROQ_MAX_TOKENS,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
             )
             return completion.choices[0].message.content.strip()
         except Exception as e:

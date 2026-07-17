@@ -1,52 +1,72 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { Eye, Camera, ClipboardList, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  CalendarCheck,
+  Camera,
+  ChevronRight,
+  ClipboardList,
+  ShieldAlert,
+  ShieldCheck,
+} from "lucide-react";
+
+const FALLBACK_DAILY_TIPS = [
+  "Brush your tongue daily to reduce bacteria.",
+  "Regular oral checks help early detection.",
+  "Stay hydrated to maintain oral health.",
+];
+
+let dailyTipsCache = null;
 
 function riskClass(level) {
-  if (!level) return "low";
-  return level.toLowerCase();
+  return (level || "Low").toLowerCase();
 }
 
-function riskLabel(score) {
-  if (score < 0.33) return "LOW RISK";
-  if (score < 0.66) return "MEDIUM RISK";
-  return "HIGH RISK";
+function riskScoreFromLevel(level) {
+  if (level === "High") return 0.86;
+  if (level === "Medium") return 0.52;
+  return 0.18;
 }
 
-function riskLevelFromScore(score) {
-  if (score < 0.33) return "Low";
-  if (score < 0.66) return "Medium";
-  return "High";
+function riskColor(level) {
+  if (riskClass(level) === "high") return "#ef4444";
+  if (riskClass(level) === "medium") return "#f97316";
+  return "#4ade80";
 }
 
-function riskHint(score) {
-  if (score < 0.33) return "No major concerns detected. Continue monitoring.";
-  if (score < 0.66) return "Some areas may need attention. Monitor changes closely.";
-  return "You should consult a specialist soon.";
+function riskLabel(level) {
+  return `${(level || "Low").toUpperCase()} RISK`;
 }
 
-function riskSummary(score) {
-  if (score < 0.33) return "No major concerns detected";
-  if (score < 0.66) return "Areas may need attention";
-  return "Areas of concern detected";
+function riskHint(level) {
+  if (level === "High") return "You should consult a specialist soon.";
+  if (level === "Medium") return "Monitor changes and consider a dental check-up.";
+  return "No major concerns detected. Continue monitoring.";
 }
 
-function riskColor(score) {
-  if (score < 0.33) return "#52C9A0";
-  if (score < 0.66) return "#EFA027";
-  return "#E24B4A";
+function riskSummary(level) {
+  if (level === "High") return "Areas of concern detected";
+  if (level === "Medium") return "Some areas may need attention";
+  return "No major concerns detected";
+}
+
+function riskDescription(level) {
+  if (level === "High") return "Multiple areas may need attention. Consult a specialist for evaluation.";
+  if (level === "Medium") return "Some areas may need monitoring. Consider a dental check-up.";
+  return "Your latest scan looks stable. Keep monitoring regularly.";
 }
 
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good Morning";
   if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
+  return "Good Afternoon";
 }
 
 function formatDate(ts) {
-  if (!ts) return "";
+  if (!ts) return "No scan yet";
   return new Date(ts).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -62,165 +82,123 @@ function formatTime(ts) {
   });
 }
 
-function formatShortDate(ts) {
-  if (!ts) return "";
-  return new Date(ts).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
+function makeGraphScans(scans, latestScan) {
+  const source = scans?.length ? [...scans].reverse() : [];
 
-function tooltipText(scan) {
-  return `Scan #${scan.id?.slice(0, 6) ?? "----"} - ${scan.risk_level ?? "Low"} Risk`;
-}
-
-function HealthWave({ scans, navigate }) {
-  const [hoveredIdx, setHoveredIdx] = useState(null);
-  const [activeIdx, setActiveIdx] = useState(scans.length - 1);
-  const containerRef = useRef(null);
-
-  if (!scans?.length) return null;
-
-  const ordered = [...scans].reverse();
-  const width = 350;
-  const height = 188;
-  const padX = 26;
-  const padTop = 24;
-  const padBottom = 34;
-  const count = ordered.length;
-
-  const xs = count === 1
-    ? [width / 2]
-    : Array.from({ length: count }, (_, index) => padX + (index / (count - 1)) * (width - padX * 2));
-
-  const ys = ordered.map((scan) => {
-    const riskVal = Math.max(0, Math.min(1, scan.risk_score ?? 0));
-    return padTop + (1 - riskVal) * (height - padTop - padBottom);
-  });
-
-  let lineD = `M ${xs[0]} ${ys[0]}`;
-  for (let index = 0; index < count - 1; index += 1) {
-    const cpx = (xs[index] + xs[index + 1]) / 2;
-    lineD += ` C ${cpx} ${ys[index]}, ${cpx} ${ys[index + 1]}, ${xs[index + 1]} ${ys[index + 1]}`;
+  if (source.length === 0 && latestScan) {
+    source.push(latestScan);
   }
-  const fillD = `${lineD} L ${xs[count - 1]} ${height} L ${xs[0]} ${height} Z`;
 
-  const latestRisk = ordered[count - 1]?.risk_score ?? 0.15;
-  const activeIndex = hoveredIdx ?? activeIdx;
-  const activeScan = ordered[activeIndex];
-  const activeX = xs[activeIndex];
-  const activeY = ys[activeIndex];
+  while (source.length < 5) {
+    const base = source[source.length - 1] || latestScan || {};
+    const levels = ["High", "High", "Medium", "Low", "Low"];
+    source.push({
+      ...base,
+      id: `${base.id || "scan"}-${source.length}`,
+      risk_level: levels[source.length],
+      risk_score: riskScoreFromLevel(levels[source.length]),
+      synthetic: !base.id,
+    });
+  }
+
+  return source.slice(-5);
+}
+
+function HealthGraph({ scans, latestScan }) {
+  const [activeIndex, setActiveIndex] = useState(null);
+  const navigate = useNavigate();
+  const graphScans = useMemo(() => makeGraphScans(scans, latestScan), [scans, latestScan]);
+
+  const width = 560;
+  const height = 260;
+  const points = graphScans.map((scan, index) => {
+    const x = 20 + index * 125;
+    const score = scan.risk_score ?? riskScoreFromLevel(scan.risk_level);
+    const y = 30 + (1 - Math.min(1, Math.max(0, score))) * 165;
+    return { x, y, scan };
+  });
+
+  const baselineY = height - 40;
+  const linePath = points.reduce((path, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`;
+    const prev = points[index - 1];
+    const mid = prev.x + (point.x - prev.x) / 2;
+    return `${path} C ${mid} ${prev.y}, ${mid} ${point.y}, ${point.x} ${point.y}`;
+  }, "");
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`;
+  const active = activeIndex !== null ? points[activeIndex] : null;
 
   return (
-    <div className="wave-container dashboard-wave" ref={containerRef}>
-      <div className="wave-axis-labels">
+    <div className="home-status-graph">
+      <svg viewBox={`0 0 ${width} ${height}`} className="home-graph-svg" aria-label="Recent scan risk timeline">
+        <defs>
+          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="0" />
+            <stop offset="100%" stopColor="#4ade80" stopOpacity="0.25" />
+          </linearGradient>
+        </defs>
+        <path className="chart-area-path" d={areaPath} fill="url(#areaGradient)" />
+        <path className="chart-line-path" d={linePath} fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="12" y1="220" x2="548" y2="220" stroke="rgba(180,195,213,0.25)" strokeDasharray="8 8" />
+        {points.map(({ x, y, scan }, index) => (
+          <g key={`${scan.id}-${index}`}>
+            <circle
+              cx={x}
+              cy={y}
+              r={activeIndex === index ? 12 : 8}
+              fill={riskColor(scan.risk_level)}
+              opacity={activeIndex === index ? 0.2 : 0}
+            />
+            <circle
+              cx={x}
+              cy={y}
+              r="6"
+              fill="rgba(2, 7, 13, 0.9)"
+              stroke={riskColor(scan.risk_level)}
+              strokeWidth="2.5"
+              className="home-graph-dot"
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveIndex(index);
+              }}
+            />
+            <circle cx={x} cy={y} r="3" fill="#ffffff" pointerEvents="none" />
+          </g>
+        ))}
+      </svg>
+      {active && (
+        <button
+          className="home-graph-tooltip"
+          style={{ left: `${Math.min(70, Math.max(4, (active.x / width) * 100 - 7))}%`, top: `${Math.max(0, (active.y / height) * 100 - 20)}%` }}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!active.scan.synthetic && active.scan.id) navigate(`/scan/${active.scan.id}`);
+          }}
+        >
+          <span>Scan #{String(active.scan.id || "----").slice(0, 6)}</span>
+          <strong>{active.scan.risk_level || "Low"} Risk</strong>
+        </button>
+      )}
+      <div className="home-graph-axis">
         <span>Older</span>
         <span>Recent</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="wave-svg">
-        <defs>
-          <linearGradient id="waveGradDashboard" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={riskColor(latestRisk)} stopOpacity="0.34" />
-            <stop offset="100%" stopColor={riskColor(latestRisk)} stopOpacity="0.03" />
-          </linearGradient>
-        </defs>
-
-        <line
-          x1={padX}
-          y1={height - 18}
-          x2={width - padX}
-          y2={height - 18}
-          stroke="rgba(17,24,39,0.08)"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-        />
-
-        <path d={fillD} fill="url(#waveGradDashboard)" className="wave-fill-path" />
-        <path
-          d={lineD}
-          fill="none"
-          stroke={riskColor(latestRisk)}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="wave-line-path"
-        />
-
-        {xs.map((x, index) => {
-          const scan = ordered[index];
-          const color = riskColor(scan.risk_score ?? 0.15);
-          const isActive = activeIndex === index;
-          return (
-            <g key={scan.id ?? index}>
-              {isActive && (
-                <circle
-                  cx={x}
-                  cy={ys[index]}
-                  r="12"
-                  fill={color}
-                  opacity="0.12"
-                  className="wave-active-halo"
-                />
-              )}
-              <circle
-                cx={x}
-                cy={ys[index]}
-                r={isActive ? 6.5 : 5}
-                fill={color}
-                stroke="white"
-                strokeWidth="2.5"
-                className="wave-dot"
-                onMouseEnter={() => setHoveredIdx(index)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                onFocus={() => setHoveredIdx(index)}
-                onBlur={() => setHoveredIdx(null)}
-                onClick={() => navigate(`/scan/${scan.id}`)}
-              >
-                <title>{tooltipText(scan)}</title>
-              </circle>
-            </g>
-          );
-        })}
-      </svg>
-
-      {activeScan && (
-        <div
-          className="wave-tooltip visible dashboard-wave-tooltip"
-          style={{
-            left: `${Math.max(10, Math.min(74, (activeX / width) * 100))}%`,
-            top: `${Math.max(4, ((activeY - 56) / height) * 100)}%`,
-          }}
-        >
-          <div className="wave-tooltip-date">{tooltipText(activeScan)}</div>
-          <div className="wave-tooltip-risk" style={{ color: riskColor(activeScan.risk_score ?? 0.15) }}>
-            {formatShortDate(activeScan.timestamp)} · {formatTime(activeScan.timestamp)}
-          </div>
-          <div className="wave-tooltip-conf">
-            {Math.round((activeScan.confidence ?? 0.85) * 100)}% model confidence
-          </div>
-          <div className="wave-tooltip-arrow" />
-        </div>
-      )}
+      <div className="home-risk-legend">
+        <span><i className="legend-dot high" />High Risk</span>
+        <span><i className="legend-dot medium" />Medium Risk</span>
+        <span><i className="legend-dot low" />Low Risk</span>
+      </div>
     </div>
   );
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="app">
-      <div className="page-header">
-        <div className="skeleton" style={{ width: 120, height: 16 }} />
-        <div className="skeleton" style={{ width: 38, height: 38, borderRadius: "50%" }} />
-      </div>
-      <div style={{ padding: "0 20px" }}>
-        <div className="skeleton skeleton-line" style={{ margin: "8px 0" }} />
-        <div className="skeleton skeleton-line short" style={{ margin: "4px 0 16px" }} />
-      </div>
-      <div className="skeleton skeleton-wave" />
-      <div className="skeleton skeleton-card" />
-      <div style={{ padding: "0 20px", display: "flex", gap: 12 }}>
-        <div className="skeleton" style={{ flex: 1, height: 116, borderRadius: 18 }} />
-        <div className="skeleton" style={{ flex: 1, height: 116, borderRadius: 18 }} />
+    <div className="app home-dark-page">
+      <div className="home-shell">
+        <div className="skeleton" style={{ width: 180, height: 24, marginBottom: 16 }} />
+        <div className="skeleton" style={{ height: 300, borderRadius: 28 }} />
+        <div className="skeleton" style={{ height: 180, borderRadius: 28, marginTop: 20 }} />
       </div>
     </div>
   );
@@ -230,6 +208,13 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dailyTips, setDailyTips] = useState(dailyTipsCache || FALLBACK_DAILY_TIPS);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+  const tipPauseUntilRef = useRef(0);
+  const tipTouchStartRef = useRef(null);
+  const tipSwipeRef = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -243,12 +228,48 @@ export default function Dashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    if (dailyTipsCache) {
+      setDailyTips(dailyTipsCache);
+      return;
+    }
+
+    let active = true;
+    apiFetch("/daily-tips")
+      .then((response) => {
+        const tips = Array.isArray(response?.tips) && response.tips.length ? response.tips : FALLBACK_DAILY_TIPS;
+        dailyTipsCache = tips;
+        if (active) {
+          setDailyTips(tips);
+          setTipIndex(0);
+        }
+      })
+      .catch(() => {
+        if (active) setDailyTips(FALLBACK_DAILY_TIPS);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (dailyTips.length <= 1) return undefined;
+    const id = window.setInterval(() => {
+      if (Date.now() < tipPauseUntilRef.current) return;
+      setTipIndex((current) => (current + 1) % dailyTips.length);
+    }, 6000);
+    return () => window.clearInterval(id);
+  }, [dailyTips.length]);
+
   if (loading) return <DashboardSkeleton />;
 
   if (error) {
     return (
-      <div className="app page-enter" style={{ padding: 20 }}>
-        <div className="message error">{error}</div>
+      <div className="app home-dark-page page-enter">
+        <div className="home-shell">
+          <div className="message error">{error}</div>
+        </div>
       </div>
     );
   }
@@ -257,183 +278,290 @@ export default function Dashboard() {
     user,
     latest_scan: latestScan,
     recent_scans: recentScans = [],
-    total_scan_count: totalScanCount,
-    days_since_last_scan: daysSinceLastScan,
     tip_of_the_day: tipOfTheDay,
+    days_since_last_scan: daysSinceLastScan,
+    trend,
   } = data;
 
-  const latestRisk = latestScan ? (
-    latestScan.risk_level === "Low" ? 0.15
-      : latestScan.risk_level === "Medium" ? 0.5
-        : 0.85
-  ) : 0;
-
-  const lastScanFilter = latestScan?.risk_level ? `${latestScan.risk_level} Risk` : "All Scans";
-  const showEmpty = !latestScan;
+  const latestRisk = latestScan?.risk_level || "Low";
+  const confidence = Math.round((latestScan?.model_confidence ?? latestScan?.confidence ?? 0.96) * 100);
+  const initials = user?.initials || user?.name?.slice(0, 2)?.toUpperCase() || "AR";
+  const firstName = user?.name || "Arsh Raj";
+  const waveColor = riskColor(latestRisk);
+  const activeTip = dailyTips[tipIndex % dailyTips.length] || tipOfTheDay || FALLBACK_DAILY_TIPS[0];
+  const notifications = [
+    {
+      id: "daily-tip",
+      icon: "💡",
+      title: "Your daily oral tip is ready",
+      body: activeTip,
+    },
+    ...(typeof daysSinceLastScan === "number"
+      ? [{
+          id: "scan-gap",
+          icon: "📅",
+          title: `It's been ${daysSinceLastScan} ${daysSinceLastScan === 1 ? "day" : "days"} since your last scan`,
+          body: daysSinceLastScan >= 5 ? "A quick check can help you keep your oral health trend visible." : "Your scan routine is active. Keep monitoring regularly.",
+        }]
+      : []),
+    ...(trend?.trend === "Improving"
+      ? [{
+          id: "improvement",
+          icon: "↗",
+          title: "Your recent scan showed improvement",
+          body: trend.description || "Recent scans suggest your risk trend is moving in a better direction.",
+        }]
+      : []),
+    {
+      id: "recommendation",
+      icon: "✓",
+      title: "New health recommendation available",
+      body: riskHint(latestRisk),
+    },
+  ];
+  const openNotifications = () => {
+    setNotificationsOpen((current) => !current);
+    setHasUnreadNotifications(false);
+  };
+  const pauseTipAutoRotation = () => {
+    tipPauseUntilRef.current = Date.now() + 4500;
+  };
+  const setManualTip = (nextIndex) => {
+    pauseTipAutoRotation();
+    setTipIndex(((nextIndex % dailyTips.length) + dailyTips.length) % dailyTips.length);
+  };
+  const openTipInCare = () => {
+    navigate(`/care?prompt=${encodeURIComponent("Explain this oral health tip")}`);
+  };
+  const handleTipKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openTipInCare();
+    }
+  };
+  const handleTipTouchStart = (event) => {
+    tipSwipeRef.current = false;
+    tipTouchStartRef.current = event.touches[0]?.clientX ?? null;
+  };
+  const handleTipTouchEnd = (event) => {
+    const startX = tipTouchStartRef.current;
+    const endX = event.changedTouches[0]?.clientX ?? null;
+    tipTouchStartRef.current = null;
+    if (startX === null || endX === null) return;
+    const delta = endX - startX;
+    if (Math.abs(delta) < 32) return;
+    tipSwipeRef.current = true;
+    event.stopPropagation();
+    setManualTip(tipIndex + (delta < 0 ? 1 : -1));
+    window.setTimeout(() => {
+      tipSwipeRef.current = false;
+    }, 0);
+  };
 
   return (
-    <div className="app page-enter">
-      <div className="page-header">
-        <div>
-          <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--green)" }}>OralAI Health</div>
-        </div>
-        <button className="header-avatar" onClick={() => navigate("/profile")}>
-          {user.initials}
-        </button>
-      </div>
-
-      <div className="greeting">
-        <div className="greeting-sub">{getGreeting()}</div>
-        <div className="greeting-main">{user.name} 👋</div>
-      </div>
-
-      {!showEmpty && (
-        <button
-          className="wave-card dashboard-status-card card-enter stagger-1"
-          onClick={() => navigate(`/history?filter=${encodeURIComponent(lastScanFilter)}`)}
-        >
-          <div className="dashboard-status-copy">
+    <div className="app home-dark-page page-enter">
+      <main className="home-shell">
+        <header className="home-hero">
+          <div className="home-hero-copy">
+            <div className="home-greeting">{getGreeting()} <span className="home-sun">☀</span></div>
+            <h1>Hello, {firstName} <span className="home-wave">👋</span></h1>
+            <p>Track your oral health. Detect early. Stay healthy.</p>
+          </div>
+          <div className="home-header-actions">
+            <button className={`home-bell${notificationsOpen ? " open" : ""}`} aria-label="Notifications" aria-expanded={notificationsOpen} onClick={openNotifications}>
+              <Bell size={24} />
+              {hasUnreadNotifications && <span />}
+            </button>
+            <button className="home-avatar" onClick={() => navigate("/profile")}>{initials}</button>
+          </div>
+        </header>
+        <section className={`home-notification-drawer${notificationsOpen ? " open" : ""}`} aria-hidden={!notificationsOpen}>
+          <div className="home-notification-head">
             <div>
-              <div className="dashboard-section-label">Your Current Status</div>
-              <div className={`dashboard-risk-display ${riskClass(latestScan?.risk_level)}`}>
-                {riskLabel(latestRisk)}
+              <strong>Notifications</strong>
+              <small>{notifications.length ? "Today in your oral health" : "No new notifications"}</small>
+            </div>
+            <button type="button" onClick={() => setNotificationsOpen(false)} aria-label="Close notifications">×</button>
+          </div>
+          {notifications.length ? (
+            <div className="home-notification-list">
+              {notifications.map((notification) => (
+                <button
+                  type="button"
+                  className="home-notification-item"
+                  key={notification.id}
+                  onClick={() => {
+                    setNotificationsOpen(false);
+                    if (notification.id === "daily-tip") navigate(`/care?prompt=${encodeURIComponent("Explain this oral health tip")}`);
+                  }}
+                >
+                  <span>{notification.icon}</span>
+                  <div>
+                    <strong>{notification.title}</strong>
+                    <small>{notification.body}</small>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="home-notification-empty">
+              <span>🔔</span>
+              <strong>No new notifications</strong>
+            </div>
+          )}
+        </section>
+
+        <section className={`home-status-card ${riskClass(latestRisk)}`} onClick={() => navigate("/history")}>
+          <div className="wave-container" aria-hidden="true">
+            <div className="wave" style={{ backgroundColor: waveColor }} />
+            <div className="wave wave2" style={{ backgroundColor: waveColor }} />
+            <div className="wave wave3" style={{ backgroundColor: waveColor }} />
+          </div>
+          <div className="home-status-header">
+            <div className="home-card-title">Your Current Status</div>
+            <button className="home-history-link" onClick={(event) => { event.stopPropagation(); navigate("/history"); }}>
+              View History
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <div className="home-status-left">
+            <div className={`home-risk-chip ${riskClass(latestRisk)}`}>{riskLabel(latestRisk)}</div>
+            <p>Based on your most recent scan</p>
+            <div className={`home-shield-orb ${riskClass(latestRisk)}`}>
+              {latestRisk === "Low" ? <ShieldCheck size={52} /> : <ShieldAlert size={52} />}
+            </div>
+            <p className="home-status-advice">{riskHint(latestRisk)}</p>
+          </div>
+          <HealthGraph scans={recentScans} latestScan={latestScan} />
+        </section>
+
+        {latestScan && (
+          <section className="home-last-scan" onClick={() => navigate(`/scan/${latestScan.id}`)}>
+            <div className="home-last-top">
+              <h2>Last Scan</h2>
+              <div className="home-last-date">
+                <CalendarCheck size={16} />
+                {formatDate(latestScan.timestamp)} <span>•</span> {formatTime(latestScan.timestamp)}
               </div>
-              <div className="dashboard-support-text">Based on your most recent scan</div>
             </div>
-            <div className={`risk-pill ${riskClass(latestScan?.risk_level)}`}>
-              <span className={`risk-dot ${riskClass(latestScan?.risk_level)}`} />
-              {latestScan?.risk_level} Risk
-            </div>
-          </div>
-
-          <HealthWave scans={recentScans} navigate={navigate} />
-
-          <div className="dashboard-status-footer">
-            <div className="status-desc">{riskHint(latestRisk)}</div>
-            <div className="dashboard-timeline-hint">Each dot represents a scan</div>
-          </div>
-        </button>
-      )}
-
-      {!showEmpty && (
-        <button
-          className="last-scan-card dashboard-last-scan card-enter stagger-2"
-          onClick={() => navigate(`/scan/${latestScan.id}`)}
-        >
-          <div
-            className="scan-card-stripe"
-            style={{
-              background: `linear-gradient(90deg, ${riskColor(latestRisk)}, rgba(59,168,245,0.92))`,
-            }}
-          />
-          <div className="scan-card-body">
-            <div className="dashboard-last-scan-header">
-              <div>
-                <div className="scan-card-title">Last Scan</div>
-                <div className="scan-card-date">
-                  {formatDate(latestScan.timestamp)} · {formatTime(latestScan.timestamp)}
+            <div className="home-last-main">
+              <div className="home-last-left">
+                <div className={`home-scan-icon ${riskClass(latestRisk)}`}>
+                  {latestRisk === "Low" ? <ShieldCheck size={48} /> : <AlertTriangle size={48} />}
+                </div>
+                <div className="home-last-copy">
+                  <span className={`home-small-risk ${riskClass(latestRisk)}`}>{riskLabel(latestRisk)}</span>
+                  <h3>{riskSummary(latestRisk)}</h3>
+                  <p>{riskDescription(latestRisk)}</p>
                 </div>
               </div>
-              <span className={`risk-pill ${riskClass(latestScan.risk_level)}`}>
-                {latestScan.risk_level}
-              </span>
+              <div className="home-confidence">
+                <span>Model Confidence</span>
+                <strong>{confidence}%</strong>
+                <div className="home-confidence-track">
+                  <i style={{ width: `${Math.max(8, Math.min(100, confidence))}%` }} />
+                </div>
+              </div>
             </div>
-
-            <div className="dashboard-last-scan-summary">{riskSummary(latestRisk)}</div>
-            <div className="dashboard-last-scan-note">
-              Model Confidence: {Math.round((latestScan.confidence ?? 0.85) * 100)}%
-            </div>
-            <div className="rec-text">
-              {latestScan.recommendation || riskHint(latestRisk)}
-            </div>
-
-            <div className="view-report-btn dashboard-inline-cta">
-              <Eye size={16} />
+            <button className="home-report-button" onClick={(event) => { event.stopPropagation(); navigate(`/scan/${latestScan.id}`); }}>
               View Full Report
+              <ChevronRight size={20} />
+            </button>
+          </section>
+        )}
+
+        <button className="home-start-scan" onClick={() => navigate("/scan")}>
+          <span className="home-start-icon"><Camera size={38} /></span>
+          <span className="home-start-text">
+            <strong>Start Scan</strong>
+            <small>Quick 30-second check</small>
+          </span>
+          <span className="home-start-arrow"><ChevronRight size={34} /></span>
+        </button>
+
+        <section className="home-quick-section">
+          <h2>Quick Actions</h2>
+          <div className="home-quick-grid">
+            <button className="home-quick-card daily" onClick={() => navigate("/scan")}>
+              <span className="home-quick-icon"><CalendarCheck size={30} /></span>
+              <strong>Daily Check</strong>
+              <small>Quick 10-second health check</small>
+              <i><ChevronRight size={26} /></i>
+            </button>
+            <button className="home-quick-card history" onClick={() => navigate("/history")}>
+              <span className="home-quick-icon"><ClipboardList size={30} /></span>
+              <strong>History</strong>
+              <small>View your past scan reports</small>
+              <i><ChevronRight size={26} /></i>
+            </button>
+          </div>
+        </section>
+
+        <section className="home-tip-card">
+          <div className="home-tip-icon">💡</div>
+          <div className="home-tip-copy">
+            <button
+              type="button"
+              className="home-tip-main"
+              onClick={() => {
+                if (!tipSwipeRef.current) openTipInCare();
+              }}
+              onKeyDown={handleTipKeyDown}
+              onTouchStart={handleTipTouchStart}
+              onTouchEnd={handleTipTouchEnd}
+              aria-label="Open AI assistant to explain this oral health tip"
+            >
+              <h2>Tip of the Day</h2>
+              <p key={activeTip} className="home-tip-text">{activeTip}</p>
+            </button>
+            <div className="home-tip-controls" onClick={(event) => event.stopPropagation()}>
+              <button
+                type="button"
+                className="home-tip-nav"
+                aria-label="Show previous oral health tip"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setManualTip(tipIndex - 1);
+                }}
+              >
+                ‹
+              </button>
+              <div className="home-tip-dots" role="tablist" aria-label="Daily health tip carousel">
+              {dailyTips.slice(0, 3).map((tip, index) => (
+                <button
+                  key={`${tip}-${index}`}
+                  type="button"
+                  className={index === tipIndex % dailyTips.length ? "active" : ""}
+                  aria-label={`Show oral health tip ${index + 1}`}
+                  aria-selected={index === tipIndex % dailyTips.length}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setManualTip(index);
+                  }}
+                />
+              ))}
+              </div>
+              <button
+                type="button"
+                className="home-tip-nav"
+                aria-label="Show next oral health tip"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setManualTip(tipIndex + 1);
+                }}
+              >
+                ›
+              </button>
             </div>
           </div>
-        </button>
-      )}
-
-      <div className="scan-btn-wrap card-enter stagger-3">
-        <button className="scan-btn dashboard-primary-scan" onClick={() => navigate("/scan")}>
-          <div className="scan-btn-icon">
-            <div className="pulse-ring" />
-            <Camera size={22} color="white" />
+          <div className="home-tooth-illustration">
+            <span className="spark one">✦</span>
+            <span className="spark two">✦</span>
+            <div className="tooth-face">🦷</div>
+            <div className="tooth-shield">✓</div>
           </div>
-          <div>
-            <div className="scan-btn-label">Start Scan</div>
-            <div className="scan-btn-sub">Quick 30-second check</div>
-          </div>
-        </button>
-      </div>
-
-      <div className="dashboard-section-head card-enter stagger-4">
-        <span>Quick Actions</span>
-      </div>
-
-      <div className="bottom-cards card-enter stagger-4">
-        <button className="mini-card dashboard-action-card" onClick={() => navigate("/scan")}>
-          <div className="mini-card-icon" style={{ background: "#EAF3DE" }}>
-            <ShieldCheck size={16} color="#3B6D11" />
-          </div>
-          <div className="mini-card-title">Daily Check</div>
-          <div className="mini-card-sub">Quick 10-second health check</div>
-          <div className="btn-mini">Start</div>
-        </button>
-
-        <button
-          className="mini-card dashboard-action-card"
-          style={{ background: "linear-gradient(135deg, #F0F5FF, #E8F0FF)", borderColor: "rgba(56,107,229,0.1)" }}
-          onClick={() => navigate("/history")}
-        >
-          <div className="mini-card-icon" style={{ background: "rgba(56,107,229,0.12)" }}>
-            <ClipboardList size={16} color="#386BE5" />
-          </div>
-          <div className="mini-card-title" style={{ color: "#1B3A8C" }}>History</div>
-          <div className="mini-card-sub" style={{ color: "#5070C0" }}>View your past scans</div>
-          <div className="btn-mini" style={{ color: "#1B3A8C", background: "rgba(56,107,229,0.12)" }}>Open</div>
-        </button>
-      </div>
-
-      {daysSinceLastScan !== null && daysSinceLastScan >= 3 && (
-        <div className="reminder-card card-enter stagger-5">
-          <div style={{ fontSize: "1.5rem", flexShrink: 0 }}>⏰</div>
-          <div>
-            <div className="reminder-title">Time to check in</div>
-            <div className="reminder-sub">
-              You have not scanned in {daysSinceLastScan} days. Regular checks make changes easier to catch early.
-            </div>
-            <button className="btn-amber" onClick={() => navigate("/scan")}>Do Quick Check</button>
-          </div>
-        </div>
-      )}
-
-      <div className="tip-card dashboard-tip-card card-enter stagger-5">
-        <div className="tip-icon-wrap">
-          <Sparkles size={18} color="#EFA027" />
-        </div>
-        <div>
-          <div className="tip-label">Tip of the Day</div>
-          <p className="tip-text">{tipOfTheDay}</p>
-        </div>
-      </div>
-
-      {showEmpty && (
-        <div className="card-enter" style={{ padding: "20px", textAlign: "center" }}>
-          <div style={{ fontSize: "3rem", marginBottom: 12 }}>🦷</div>
-          <h3>Welcome to OralAI</h3>
-          <p style={{ color: "var(--text-secondary)", marginTop: 8, marginBottom: 20, fontSize: "0.88rem" }}>
-            Start your first scan to get a clear baseline for your oral health.
-          </p>
-          <button className="scan-btn" onClick={() => navigate("/scan")} style={{ display: "inline-flex" }}>
-            <Camera size={20} color="white" />
-            <span style={{ fontWeight: 700 }}>Take Your First Scan</span>
-          </button>
-        </div>
-      )}
-
-      <div className="spacer" />
+        </section>
+      </main>
     </div>
   );
 }

@@ -13,11 +13,15 @@ from app.config import get_settings
 from app.inference.pipeline import load_efficientnet
 from app.routers.auth import router as auth_router
 from app.routers.dashboard import router as dashboard_router
+from app.routers.daily_tips import router as daily_tips_router
 from app.routers.history import router as history_router
 from app.routers.patients import router as patients_router
+from app.routers.preferences import router as preferences_router
 from app.routers.predict import router as predict_router
 from app.routers.report import router as report_router
 from app.routers.chat import router as chat_router
+from app.routers.clinics import router as clinics_router
+from app.daily_tips import ensure_daily_tips
 
 # Configure logging so every module's logger prints to console
 logging.basicConfig(
@@ -60,6 +64,7 @@ async def startup_event():
     state.model_b1 = load_efficientnet("efficientnet_b1", str(MODELS_DIR / "b1.pth"), device)
     state.model_b2 = load_efficientnet("efficientnet_b2", str(MODELS_DIR / "b2.pth"), device)
     logger.info("Both models loaded and ready")
+    ensure_daily_tips()
 
 
 @app.get("/health")
@@ -69,8 +74,11 @@ def health():
 
 app.include_router(auth_router)
 app.include_router(dashboard_router)
+app.include_router(daily_tips_router)
 app.include_router(patients_router)
+app.include_router(preferences_router)
 app.include_router(predict_router)
 app.include_router(history_router)
 app.include_router(report_router)
 app.include_router(chat_router)
+app.include_router(clinics_router)

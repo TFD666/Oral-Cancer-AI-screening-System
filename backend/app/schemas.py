@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.sanitize import clean_text
 
@@ -19,6 +19,8 @@ class PatientCreateIn(BaseModel):
 
 
 class PredictionResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     id: str
     patient_id: str
     prediction: Literal["Cancer", "Non-Cancer"]
@@ -29,3 +31,14 @@ class PredictionResponse(BaseModel):
     image_url: str
     heatmap_url: str
     timestamp: datetime
+
+
+class UserPreferencesUpdate(BaseModel):
+    display_name: Optional[str] = Field(default=None, max_length=200)
+    scan_reminders: Optional[bool] = None
+    daily_tips: Optional[bool] = None
+
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def sanitize_display_name(cls, v):
+        return clean_text(v)

@@ -250,3 +250,186 @@
 ## Why this order
 - The page structure was updated before the styling because the root problem was information hierarchy, not decoration. If the order of meaning is wrong in the JSX, CSS can only mask it temporarily.
 - The dashboard, result, history, care, and profile changes were handled together because they share the same design language and interaction vocabulary; doing them separately would have created visual drift and inconsistent behavioral cues.
+
+## Session 21
+- **Redesigned the Home Dashboard to match the provided dark reference UI:** replaced the previous light dashboard with a dark navy mobile layout following the requested order: greeting, health status graph, last scan, Start Scan CTA, quick actions, tip card, and bottom navigation.
+- **Rebuilt the health status graph:** added a smooth red-to-orange-to-green curve, colored scan points, click tooltip behavior, older/recent axis labels, and a compact risk legend while keeping the existing dashboard scan data binding.
+- **Reworked the Last Scan card:** matched the reference hierarchy with a left risk icon, risk badge, result text, date/time metadata, right-aligned confidence, progress bar, and full-card navigation to the scan result.
+- **Recreated the primary Start Scan CTA and quick-action cards:** added the green-to-blue gradient CTA, press interactions, equal-sized Daily Check/History cards, and route-preserving click behavior.
+- **Added the reference-style Tip card:** soft amber border, icon block, tooth illustration treatment, and pagination dots.
+- **Scoped the dark visual treatment to the home route:** the dark background and bottom navigation styling activate only while the redesigned Dashboard is mounted, avoiding a full app-wide theme rewrite.
+
+## Why this order
+- The user provided a target design rather than general inspiration, so the implementation prioritized matching layout, spacing, and hierarchy before secondary polish.
+- The API contract was intentionally left unchanged; the redesign is a frontend presentation layer over the existing `/dashboard` response.
+
+## Session 22
+- **Refined the dark Home Dashboard without changing its structure:** improved header spacing, aligned the notification/avatar cluster, increased subtitle readability, and kept the target screen order intact.
+- **Elevated the Health Status card:** thickened the graph stroke, added SVG glow, increased dot size, improved red/orange/green clarity, tightened the left status group, and gave the graph stronger visual focus.
+- **Balanced the Last Scan card:** improved spacing between the result copy and model confidence, widened the confidence progress bar, and strengthened the report button border/glow.
+- **Improved interaction feel:** merged the Start Scan arrow into the main button treatment, added a ripple-like press effect, strengthened quick action card elevation, improved tip-card hierarchy, and added a stronger active navbar glow.
+
+## Why this order
+- This was a refinement pass over the already-matched target design, so changes stayed in scoped home-page styles and small graph SVG tuning rather than changing layout or data flow.
+
+## Session 23
+- **Added cached AI-powered daily tips:** created `backend/app/daily_tips.py` to generate one shared daily batch through the existing Groq chat path using `llama3-8b-8192`, then cache the results in Supabase instead of generating on every frontend request.
+- **Added `GET /daily-tips`:** the endpoint reads the user's latest scan risk level, returns personalized cached tips plus a general tip, and falls back to safe static tips if Supabase or Groq is unavailable.
+- **Added database setup for `daily_tips`:** updated `backend/schema.sql` and added `backend/migrate_daily_tips.sql` with the new table and validity index.
+- **Added startup cache warmup:** backend startup now attempts to generate tips if no valid tips exist, but logs failures rather than crashing if the migration has not been run yet.
+- **Made the Home Tip card dynamic:** the frontend fetches `/daily-tips` once, caches the result in memory, rotates tips every 6 seconds, animates tip text transitions, and silently falls back to three static tips.
+
+## Why this order
+- The backend cache was built first because the important architectural rule is that the frontend must never call the LLM directly or trigger generation per refresh.
+- The frontend was then layered on as a non-blocking enhancement so the dashboard still renders even if tips fail, preserving a live-looking card with fallback content.
+
+## Session 24
+- **Refined the Home header alignment:** tightened the greeting stack, balanced the subtitle width, and aligned the notification bell and avatar on the same visual center line.
+- **Added a real notification drawer:** the bell now opens a dark, blurred notification sheet with app-style notification rows, tap feedback, close behavior, and unread-dot clearing on open.
+- **Polished the Last Scan card:** improved spacing, right-side confidence alignment, progress-bar animation, border glow, hover elevation, and report button contrast while preserving existing scan navigation and data binding.
+
+## Why this order
+- The changes stayed frontend-only because the underlying dashboard, tips, chat, and scan systems are already working and should not be disturbed for UI polish.
+- The notification drawer was implemented as local dashboard UI state so it feels real without introducing new backend contracts or persistence requirements.
+
+## Session 25
+- **Refined the Care & Guidance page into a premium dark assistant experience:** added a glass back button/header treatment, stronger assistant identity card, animated assistant avatar, online pulse, and assistant options button.
+- **Improved chat presentation without touching AI logic:** restyled AI and user bubbles, timestamps, bot avatar, typing state, input bar, send button, and suggestion chips while preserving the existing `/chat` request flow, memory behavior, and backend suggestions.
+- **Upgraded scan context and learning cards:** made scan context feel like a glowing risk-aware banner and restyled education cards with stronger depth, icon glow, better typography, and hover/tap polish.
+
+## Why this order
+- The chat architecture was already stable, so this pass intentionally stayed at the component/CSS layer and did not alter prompt construction, memory, Groq calls, or API contracts.
+- The Care page needed to visually catch up with the Home page; the dark ambient background and glass surfaces were scoped to `.care-dark-page` to avoid app-wide regressions.
+
+## Session 26
+- **Repaired Care & Guidance layout sizing after the premium UI pass:** fixed the page container width, chat panel width, message bubble max-widths, input grid sizing, suggestion-chip scrolling, and educational-card grid constraints.
+- **Preserved working AI behavior:** no backend routes, chat payloads, memory retrieval, suggestions, scan context, or navigation contracts were changed.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the layout repair.
+
+## Why this order
+- The broken screen was caused by CSS layout constraints rather than AI/chat logic, so the fix was applied as scoped `.care-dark-page` CSS overrides instead of rewriting the component or touching backend code.
+- The education cards were handled carefully because the earlier grid did not match the existing JSX structure, which was one of the main causes of collapsed text and cramped layout.
+
+## Session 27
+- **Stabilized the Care & Guidance layout architecture:** added final shrink-prevention rules for the page shell, chat panel, message rows, input grid, suggestion chips, and education cards so content scrolls horizontally when needed instead of collapsing into unreadable columns.
+- **Fixed educational card collapse:** enforced readable card widths, `flex-shrink: 0`, stable scroll snapping, and normal word wrapping so bullet text no longer stacks vertically or wraps letter-by-letter.
+- **Completed the assistant menu interaction:** the three-dot control now opens a dark glass menu with Clear Chat, View Scan Context, Start New Conversation, and AI Safety Info actions.
+- **Added lightweight assistant modals:** scan context and safety info now display in-app without changing backend chat memory or API contracts.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the stabilization pass.
+
+## Why this order
+- The unresolved issue was nested flex/grid collapse, so the fix prioritized minimum readable widths, non-shrinking cards, and horizontal overflow boundaries before cosmetic polish.
+- The menu was completed after layout stabilization because dead controls are UX debt, but the implementation intentionally resets only frontend-visible state and does not delete backend memory.
+
+## Session 28
+- **Completed Care page attachment interactions:** the paperclip button now opens a native file picker for JPG, JPEG, PNG, WEBP, PDF, and TXT files with a 10 MB limit.
+- **Added supporting attachment previews:** selected images show a thumbnail, documents show a file card with filename and size, and unsupported/oversized files show inline dark-theme validation errors.
+- **Passed attachment context into chat without changing the backend contract:** attachment metadata and TXT excerpts are folded into the existing chat message text so the assistant can reference the supporting file during the current conversation.
+- **Made `View all` functional:** the Learn section now opens a dark slide-up education sheet with categorized oral-health topics and topic cards that prefill the chat input for follow-up explanation.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the interaction pass.
+
+## Why this order
+- The upload feature was implemented as supporting chat context, not as a second diagnostic scan flow, because the primary scan upload pipeline already exists and should remain separate.
+- The frontend keeps the existing `/chat` payload shape to avoid disturbing the stable AI memory and backend architecture while still making uploads useful to the assistant.
+
+## Session 29
+- **Refined the History page into the premium dark UI system:** replaced the older compressed history layout with a cinematic header, large segmented risk filters, dark glass surfaces, and Home/Care-consistent spacing.
+- **Added a redesigned health trend card:** the card now includes trend status, derived fallback trend logic, an animated SVG curve with glowing nodes, Older/Recent axis labels, and a `View Insights` action.
+- **Added a trend insights sheet:** the panel explains trend direction, scan frequency, recent risk pattern, and a simple recommendation without changing backend APIs.
+- **Rebuilt recent scans as cinematic timeline cards:** each real scan now renders with a risk-colored accent, large risk icon, scan number, timestamp, status summary, risk badge, confidence, report navigation, and Ask AI navigation.
+- **Upgraded scan actions:** added a neon sort toggle and a premium Start New Scan CTA banner while preserving existing filtering, sorting, `/scan/:id`, `/care?scan_id=...`, and `/scan` routes.
+- **Validated the frontend bundle:** `npm run build` succeeded after rerunning outside the sandbox when Vite/esbuild process spawning was blocked by the sandbox.
+
+## Why this order
+- The History page was functionally correct but visually behind the Home and Care pages, so the change stayed frontend-only and reused the existing `/history` data contract.
+- Trend logic uses backend data when present and derives a simple fallback locally only when needed, keeping the interface informative without introducing a new backend dependency.
+
+## Session 30
+- **Polished the History page container and viewport background:** added route-scoped dark body/background styling so the page no longer appears inside white side gutters.
+- **Improved History page proportions:** widened the History shell to a more cinematic mobile-app width while keeping it centered and responsive.
+- **Fixed scan-card text collapse:** changed card sizing so the risk icon and right-side metadata have fixed space while the center text column keeps readable width and avoids letter-by-letter wrapping.
+- **Improved scan card typography and spacing:** increased card height, internal padding, title sizing, summary line-height, and confidence alignment for more readable timeline cards.
+- **Refined trend and CTA spacing:** gave the trend card stronger hierarchy and widened graph placement, then expanded the bottom CTA with better padding and button sizing.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the polish pass.
+
+## Why this order
+- The biggest visible defect was not the data or component logic; it was CSS width distribution. The fix therefore focused on container/background rules and non-collapsing scan-card geometry.
+- The body background was scoped with `:has(.history-dark-page)` so the dark immersive viewport applies to History without globally forcing all existing light pages into the dark theme.
+
+## Session 31
+- **Redesigned Profile & Settings into the premium dark UI system:** replaced the bright compressed profile view with a cinematic header, dark viewport background, large hero card, glass stats panel, and dark settings groups matching Home, Care, and History.
+- **Preserved auth and dashboard data flow:** profile still reads the Supabase user session, dashboard scan summary, current risk, last scan date, total scan count, and uses the existing logout flow.
+- **Made profile interactions functional:** Edit Profile opens a modal and persists display name/email locally, notification toggles persist in local storage, Download All Reports exports `/history` data as JSON, and all settings rows open modal/stub flows instead of being dead controls.
+- **Improved safety around destructive actions:** Delete Account now uses a confirmation modal and does not instantly delete data from the screen.
+- **Upgraded Profile visual polish:** added glowing avatar, edit avatar overlay, neon toggles, large section rows, danger logout button, notification panel, and route-scoped dark bottom navigation treatment.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the Profile redesign.
+
+## Why this order
+- The Profile page already had working session and dashboard loading, so the redesign kept that logic and focused on replacing the weak presentation layer.
+- Notification preferences were persisted locally because no stable backend preferences endpoint was present; this satisfies non-fake behavior without adding backend architecture.
+
+## Session 32
+- **Refined Profile responsive typography and sizing:** capped oversized hero typography with `clamp()`, reduced aggressive heading scale, and kept the greeting within balanced wrapping limits.
+- **Improved Profile hero fitting:** adjusted the avatar/content grid, avatar sizes, edit button size, email row, and action button spacing so the hero remains readable without colliding or overflowing.
+- **Balanced stats and settings proportions:** tuned stat icon/value/subtext sizes, converted stats into compact rows on smaller screens, and improved settings row height, padding, icon size, and toggle alignment.
+- **Protected bottom navigation spacing:** increased route bottom padding with safe-area support so Profile content does not hide behind the fixed navigation.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the responsive refinement.
+
+## Why this order
+- The dark Profile redesign was visually correct but oversized; this pass kept the visual direction and corrected only scale, spacing, and responsive layout rules.
+- The hero stayed two-column for longer because stacking too early made the page feel oversized and caused awkward text wrapping on normal mobile widths.
+
+## Session 33
+- **Redesigned the existing `/scan` page into the premium dark UI system:** replaced the old workspace layout with a cinematic header, glowing dashed upload card, image preview state, analyze CTA, next-step explanation card, and best-results tips card.
+- **Preserved the scan pipeline:** the page still sends the selected file through the existing `FormData` request to `/predict` and keeps the post-scan result/report link flow intact.
+- **Added upload UX improvements:** the upload card now opens the file picker, supports drag and drop, validates JPG/JPEG/PNG files under 10 MB, shows filename/size, and allows removing the selected image before analysis.
+- **Matched the app-wide dark visual language:** added route-scoped `.scan-dark-page` styles with glassmorphism, teal/cyan glow, responsive cards, animated shimmer/pulse effects, and scan-specific bottom navigation treatment.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the scan redesign.
+
+## Why this order
+- The backend inference flow was already working, so the change stayed focused on the existing `/scan` component and scoped CSS instead of touching API logic.
+- File validation was added locally before submission because it improves user feedback immediately while still leaving backend validation as the final safety layer.
+
+## Session 34
+- **Fixed the `/scan` redesign not rendering:** found the root cause in `frontend/src/App.jsx`; the `/scan` route was still importing and mounting the older `ScanUpload.jsx` component instead of the redesigned `NewScan.jsx`.
+- **Switched the active route to `NewScan`:** `/scan` now mounts the premium redesign component directly while keeping the protected route wrapper and existing `/scan/:id` result route unchanged.
+- **Preserved existing scan completion behavior:** after `/predict` succeeds, the redesigned page now navigates to `/scan/{id}` like the previously active scan upload flow.
+- **Hardened scan-page background overrides:** strengthened route-scoped selectors for `html`, `body`, `#root`, `.app-shell`, and `.app.scan-dark-page` so old white parent backgrounds and legacy `.app` constraints do not visually leak through.
+- **Cleared Vite cache and restarted only the frontend:** stopped the process bound to port `5173`, removed `frontend/node_modules/.vite`, restarted Vite, and confirmed `http://127.0.0.1:5173/scan` returns HTTP 200.
+- **Validated active source and bundle:** confirmed the running Vite-served `App.jsx` imports `NewScan`, the served `NewScan.jsx` contains `scan-upload-premium`, and the production bundle includes the premium scan classes/styles.
+
+## Why this order
+- The browser showed the old scan UI because the route still pointed at the old component; styling changes could not fix a component that was not mounted.
+- The route fix came before CSS hardening because render-path correctness is the root-level dependency; once the right component is mounted, scoped CSS can reliably control the visual layer.
+
+## Session 35
+- **Fixed the scan page `What happens next?` responsiveness:** replaced the cramped inline four-feature layout with stable glass mini-cards that render as a 2x2 grid on mobile and can expand to four columns on wider screens.
+- **Stopped text overflow and clipping:** constrained feature labels with smaller responsive type, balanced line wrapping, proper line-height, and fixed card padding so long text like `Personalized Recommendations` wraps cleanly.
+- **Improved section polish:** centered each icon/title pair, added consistent icon sizing, neon glow, card borders, soft elevation, and hover lift to match the dark premium design language.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the layout refinement.
+
+## Why this order
+- The problem was CSS grid geometry, not JSX or backend behavior, so the fix stayed entirely in scoped scan-page styles.
+- The 2x2 mobile grid prevents the root failure mode: four feature labels competing for too little horizontal space.
+
+## Session 36
+- **Removed Care page white viewport gaps:** added a final route-scoped background guard for `html`, `body`, `#root`, `.app-shell`, and `.app.care-dark-page` so the full Care route uses the dark neon gradient instead of falling back to white/gray outside the mobile container.
+- **Fixed Care page full-height behavior:** ensured the route ancestors and Care wrapper use full viewport height and flex layout so the dark background continues below content and behind the bottom navigation.
+- **Aligned Care bottom navigation with the dark app shell:** added Care-specific bottom-nav glass styling so the navbar floats over the dark background rather than exposing a light parent area.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the background stabilization.
+
+## Why this order
+- The remaining issue was not inside chat logic or message layout; it was ancestor background inheritance. The fix therefore targets the full route wrapper chain instead of changing the Care component.
+- The final override is placed late in the stylesheet intentionally, so it wins over older `.app` and `.care-dark-page` rules accumulated during earlier passes.
+
+## Session 37
+- **Redesigned the existing scan result page into the premium dark UI system:** rebuilt `frontend/src/pages/ScanDetail.jsx` around the target structure: glowing header, dynamic risk hero card, analysis image cards, information cards, action cards, disclaimer, and floating bottom actions.
+- **Preserved all result-page functionality:** the page still fetches `/report/{id}`, displays prediction/risk/confidence/image/heatmap data, opens image previews, navigates to scan-specific AI chat, opens nearby clinic search, prints/downloads the report, shares the result link, and starts a new scan.
+- **Added dynamic risk theming:** low, medium, and high risk states now drive the hero accent color, glow, risk badge, icon treatment, and prediction styling without changing backend risk logic.
+- **Removed old light-theme leakage:** added late, route-scoped `.result-dark-page` CSS for `html`, `body`, `#root`, `.app-shell`, and the result wrapper so the result route uses the same cinematic dark background as the rest of the redesigned app.
+- **Improved responsive result layout:** image cards, confidence panel, action cards, disclaimer, and bottom action bar now scale for mobile widths without text overflow or clipped content.
+- **Validated the frontend bundle:** ran `npm run build` successfully after the result-page redesign.
+
+## Why this order
+- The route and backend report contract were already correct, so the safest fix was to replace the result page presentation layer while leaving the fetch and action handlers intact.
+- The new CSS is scoped under `.result-dark-page` and placed late in the stylesheet because older `.result-*` rules still exist; higher-specificity scoped styles prevent the old light design from reappearing.

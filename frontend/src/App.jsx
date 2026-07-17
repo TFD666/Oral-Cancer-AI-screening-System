@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BottomNav from "./components/BottomNav";
 import Dashboard from "./pages/Dashboard";
-import ScanUpload from "./pages/ScanUpload";
+import NewScan from "./pages/NewScan";
 import ScanDetail from "./pages/ScanDetail";
 import History from "./pages/History";
 import CareGuidance from "./pages/CareGuidance";
@@ -28,7 +28,7 @@ export default function App() {
           path="/scan"
           element={
             <ProtectedRoute>
-              <ScanUpload />
+              <NewScan />
             </ProtectedRoute>
           }
         />

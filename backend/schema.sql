@@ -47,6 +47,14 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS daily_tips (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  risk_level TEXT NOT NULL CHECK (risk_level IN ('low', 'medium', 'high', 'general')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  expires_at TIMESTAMP
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_patients_created_by ON patients (created_by);
 CREATE INDEX IF NOT EXISTS idx_predictions_created_by ON predictions (created_by);
@@ -55,12 +63,14 @@ CREATE INDEX IF NOT EXISTS idx_predictions_timestamp ON predictions (timestamp D
 CREATE INDEX IF NOT EXISTS idx_chat_user_created ON chat_messages (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chat_scan ON chat_messages (scan_id);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_email ON user_preferences (user_email);
+CREATE INDEX IF NOT EXISTS idx_daily_tips_valid ON daily_tips (risk_level, expires_at DESC);
 
 -- Row Level Security
 ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE predictions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_tips ENABLE ROW LEVEL SECURITY;
 
 -- patients policies
 DROP POLICY IF EXISTS "Doctors see own patients" ON patients;
@@ -117,3 +127,9 @@ CREATE POLICY "Users select own chat" ON chat_messages
   FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users insert own chat" ON chat_messages
   FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- daily_tips policies
+DROP POLICY IF EXISTS "Authenticated users read valid daily tips" ON daily_tips;
+CREATE POLICY "Authenticated users read valid daily tips" ON daily_tips
+  FOR SELECT TO authenticated
+  USING (expires_at IS NULL OR expires_at > NOW());
